@@ -1,0 +1,84 @@
+{
+    "solicitudes": [
+        {
+            "cust_nombreSol_defaultValue": "Reporte Mensual",
+            "cust_nombreTSol_defaultValue": "Financiero",
+            "cust_solicitante": "hello",
+            "cust_fechaSol": "2025-01-01",
+            "cust_activeStep": true,
+            "cust_aprobUser": "SFADMIN_LBM"
+        },
+        {
+            "cust_nombreTSol_defaultValue": "Soporte TI",
+            "cust_nombreSol_defaultValue": "Acceso a Sistema X",
+            "cust_solicitante": "Ana Gómez Pérez",
+            "cust_fechaSol": "2025-01-15",
+            "cust_activeStep": true,
+            "cust_aprobUser": "SFADMIN_LBM"
+        },
+        {
+            "cust_nombreSol_defaultValue": "Configuración de Red",
+            "cust_nombreTSol_defaultValue": "Infraestructura",
+            "cust_solicitante": "Carlos Rodríguez López",
+            "cust_fechaSol": "2025-02-10",
+            "cust_activeStep": true,
+            "cust_aprobUser": "SFADMIN_LBM"
+        },
+        {
+            "cust_nombreSol_defaultValue": "Creación de Usuario Nuevo",
+            "cust_nombreTSol_defaultValue": "Recursos Humanos",
+            "cust_solicitante": "María Fernández Ruiz",
+            "cust_fechaSol": "2025-03-05",
+            "cust_activeStep": false,
+            "cust_aprobUser": "SFADMIN_LBM"
+        },
+        {
+            "cust_nombreSol_defaultValue": "Solicitud de Vacaciones",
+            "cust_nombreTSol_defaultValue": "Personal",
+            "cust_solicitante": "Juan Martínez Soto",
+            "cust_fechaSol": "2025-03-20",
+            "cust_activeStep": true,
+            "cust_aprobUser": "SFADMIN_LBM"
+        },
+        {
+            "cust_nombreSol_defaultValue": "Actualización de Software",
+            "cust_nombreTSol_defaultValue": "Desarrollo",
+            "cust_solicitante": "Elena García Torres",
+            "cust_fechaSol": "2025-04-01",
+            "cust_activeStep": false,
+            "cust_aprobUser": "SFADMIN_LBM"
+        },
+        {
+            "cust_nombreSol_defaultValue": "Revisión de Contrato",
+            "cust_nombreTSol_defaultValue": "Legal",
+            "cust_solicitante": "Pedro Sanchez Díaz",
+            "cust_fechaSol": "2025-04-25",
+            "cust_activeStep": true,
+            "cust_aprobUser": "SFADMIN_LBM"
+        },
+        {
+            "cust_nombreSol_defaultValue": "Cotización de Equipos",
+            "cust_nombreTSol_defaultValue": "Compras",
+            "cust_solicitante": "Sofía Vargas Cruz",
+            "cust_fechaSol": "2025-05-12",
+            "cust_activeStep": true,
+            "cust_aprobUser": "SFADMIN_LBM"
+        },
+        {
+            "cust_nombreSol_defaultValue": "Mantenimiento Preventivo",
+            "cust_nombreTSol_defaultValue": "Operaciones",
+            "cust_solicitante": "Daniel Herrera Blanco",
+            "cust_fechaSol": "2025-06-01",
+            "cust_activeStep": true,
+            "cust_aprobUser": "SFADMIN_LBM"
+        },
+        {
+            "cust_nombreSol_defaultValue": "Consulta de Proyecto",
+            "cust_nombreTSol_defaultValue": "Consultoría",
+            "cust_solicitante": "Laura Jiménez Mora",
+            "cust_fechaSol": "2025-06-20",
+            "cust_activeStep": false,
+            "cust_aprobUser": "SFADMIN_LBM"
+        }
+    ]
+}

@@ -1,0 +1,120 @@
+<mvc:View controllerName="com.amb.ambpendiapro.controller.Main"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.ui.table"
+    xmlns:m="sap.m"
+    xmlns:core="sap.ui.core" width="1024px" >
+    <m:Page id="page" title="{i18n>title}">
+        <m:customHeader>
+            <m:Toolbar>
+                <core:Icon src="sap-icon://pending" size="1.5rem" class="sapUiNoMarginEnd sapUiMediumMarginBegin"/>
+                <m:Title text="Pendientes de aprobar" level="H2"/>
+
+            </m:Toolbar>
+        </m:customHeader>
+        <m:content>
+            <Table
+                id="requestsTable"
+                rows="{
+                        path: '/cust_INETUM_SOL_DM_0001',
+                        sorter: { path: 'externalCode',
+                                  descending: false
+                                }
+                      }"
+                class="sapUiResponsiveMargin"
+                enableCellFilter="{modeloLocal>/cellFilterOn}"
+				filter="filterGlobally"
+                width="auto"
+                selectionMode="MultiToggle"
+                busy="{busy>/tableBusy}" busyIndicatorDelay="0" busyIndicatorSize="Medium"
+                >
+                <extension>
+					<m:OverflowToolbar style="Clear">
+						<m:SearchField
+							placeholder="Filter"
+							value="{modeloLocal>/globalFilter}"
+							search="filterGlobally"
+							width="15rem"/>
+                        <m:Button
+							icon="sap-icon://decline"
+							tooltip="Clear all sortings"
+							press="clearAllSortingsFilters"/>
+						<m:ToolbarSpacer/>
+						<m:Title id="counterTitle" text="{= ${view>/filteredCount} + ' ' + (${view>/filteredCount} > 1 ? 'solicitudes' : 'solicitud') }" titleStyle="H5"/>
+					</m:OverflowToolbar>
+				</extension>
+
+                <columns>
+                    <Column id="colSolicitud" width="25%" filterProperty="cust_nombreSol_defaultValue" sortProperty="cust_nombreSol_defaultValue">
+                        <m:Label text="Solicitud" />
+                        <template>
+							<m:Text text="{cust_nombreSol_defaultValue}" wrapping="false" />
+						</template>
+                    </Column>
+                    <Column id="colTipo" hAlign="Center" width="15%" filterProperty="cust_nombreTSol_defaultValue" sortProperty="cust_nombreTSol_defaultValue" >
+                        <m:Label text="Tipo" />
+                         <template>
+							<m:Text text="{cust_nombreTSol_defaultValue}" wrapping="false" />
+						</template>
+                    </Column> 
+                    <Column id="colSolicitante" hAlign="Center" width="25%" filterProperty="cust_solicitante" sortProperty="cust_solicitante">
+                        <m:Label text="Solicitante" />
+                         <template>
+							<m:Text text="{cust_solicitante}" wrapping="false" />
+						</template>
+                    </Column>
+                    <Column id="colFecha" hAlign="Center" width="15%" sortOrder="None" filterProperty="cus_fechaSol" sortProperty="cus_fechaSol">
+                        <m:Label text="F. Solicitud" />
+                         <template>
+							<m:Text text="{
+                                    path: 'cust_fechaSol',
+                                    type: 'sap.ui.model.odata.type.DateTime',
+                                    formatOptions: { style: 'long', pattern: 'dd/MM/yyyy' }}" wrapping="false" />
+						</template>
+                    </Column>
+                    <Column id="colVencimiento" hAlign="Center" width="15%">
+                        <m:Label text="Vencimiento" />
+                        <template>
+                            <m:ObjectStatus text="text" />
+                        </template>
+                    </Column>
+                    <Column id="colAcciones" hAlign="Center" width="30%">
+                        <m:Label text="Acciones" />
+                        <template>
+                            <m:OverflowToolbar style="Clear" class="sapUiNoMarginEnd">
+                                <m:Button                                    
+                                    icon="sap-icon://accept"
+                                    type="Success"
+                                    tooltip="Aprobar"
+                                    press=".onApprove"
+                                    class="sapUiNoMarginEnd sap-icon-color-positive"  />
+                                <m:Button
+                                    icon="sap-icon://decline"
+                                    type="Reject"
+                                    tooltip="Rechazar"
+                                    press=".onReject"
+                                    class="sapUiNoMarginEnd sap-icon-color-negative" />
+                                <m:Button
+                                    icon="sap-icon://arrow-left"
+                                    type="Neutral"
+                                    tooltip="Retroceder"
+                                    press=".onReturn1"
+                                    class="sapUiNoMarginEnd sap-icon-color-negative" />
+                                <m:Button
+                                    icon="sap-icon://display"
+                                    type="Transparent"
+                                    tooltip="Ver Detalle"
+                                    press=".onDetail" />
+                                <m:Button
+                                    icon="sap-icon://undo"
+                                    type="Attention"
+                                    tooltip="Devolver"
+                                    press=".onReturn"
+                                    class="sapUiNoMarginEnd" />
+                            </m:OverflowToolbar>
+                        </template>
+                    </Column>
+                </columns>
+            </Table>
+        </m:content>
+    </m:Page>
+</mvc:View>
