@@ -1,69 +1,160 @@
 sap.ui.define([
-], function () {
+    "../service/service",
+    "sap/ui/core/format/DateFormat"
+], function (service, DateFormat) {
     "use strict";
     return {
-        approvalStatus: function (status) {
-            if (status === "A") {
-                return "Success";
-            } else {
-                return "Error";
-            }
-        },
-        editingStatus: function (isActive) {
-            if (isActive) {
-                return "Active";
-            } else {
-                return "Draft";
-            }
-        },
-        setStatusIcon: function (isDraft) {
-            if (isDraft === sap.m.ObjectMarkerType.Draft) {
-                return "sap-icon://edit";
-            }
-            return "sap-icon://complete";
-        },
-        setColor: function (isDraft) {
-            if (isDraft === sap.m.ObjectMarkerType.Draft) {
-                return "#0754f8";
-            }
-        },
-        setStatusColor: function (isDraft) {
-            if (isDraft === sap.m.ObjectMarkerType.Draft) {
-                return "#0754f8";
-            }
-            return "#1d2d3e";
-        },
-        getFechaFormateada: function (fecha) {
-            return this.formatDateFromBackend(fecha);
-        },
-        formatDateFromBackend: function (dateString) {
-            // Separar la parte entera de la parte decimal
-            var dateTime = dateString.split(".");
-            var datePart = dateTime[0];
+        service: service,
+        formatVencimiento: function (sCustFechaVenci, sCustVto) {
 
-            // Extraer cada componente de la fecha
-            var year = datePart.substring(0, 4);
-            var month = datePart.substring(4, 6);
-            var day = datePart.substring(6, 8);
+            if (!sCustFechaVenci || sCustFechaVenci === null || sCustFechaVenci === "null") {
+                return "";
+            }
+            if (!sCustFechaVenci instanceof Date || isNaN(sCustFechaVenci.getTime())) {
+                return "";
+            }
+            let oToday = new Date();
+            let oCusFeSol = new Date(sCustFechaVenci);
+            if (oCusFeSol >= oToday) {
+                // const oDateFormat = DateFormat.getDateInstance({
+                //     style: "medium"
+                //     // pattern: "dd/MM/yyyy"
+                // });
+                return sCustVto;
+            }else{
+                let sDiasVencidos = oToday.getTime() - oCusFeSol.getTime();
+                const daysSinceRequest = Math.floor(sDiasVencidos / (1000 * 60 * 60 * 24));
+                return `Vencida \n${daysSinceRequest} días`;
+            }
 
-            return day + "/" + month + "/" + year;
         },
-        nombreCamposLog01: function (campo) {
-            const oCamposLog = this.getView().getModel("modeloLocal").getProperty("/CamposLog01");
-            return oCamposLog[campo] || "UPDATE";
+        formatVencimientoStatus: function(sCustFechaVenci, sCustVto){
+            if (!sCustFechaVenci || sCustFechaVenci === null || sCustFechaVenci === "null") {
+                return "None";
+            }
+            if (!sCustFechaVenci instanceof Date || isNaN(sCustFechaVenci.getTime())) {
+                return "None";
+            }
+            let oToday = new Date();
+            let oCusFeSol = new Date(sCustFechaVenci);
+            // console.log(oToday, "hoyno: " + oCusFeSol);
+            if (oCusFeSol >= oToday) {
+                return "None";
+            }else{
+                return `Error`;
+            }
+
         },
-        nombreCamposLog08: function (campo) {
-            const oCamposLog = this.getView().getModel("modeloLocal").getProperty("/CamposLog08");
-            return oCamposLog[campo] || "UPDATE";
+        numberUnit: function (sValue) {
+            if (!sValue) {
+                return "";
+            }
+            return parseFloat(sValue).toFixed(2);
         },
-        fechaLog01: function (fecha) {
-            return fecha.substring(6, 8) + "/" + fecha.substring(4, 6) + "/" + fecha.substring(0, 4);
+
+        formatStatusState: function (sStatus) {
+            switch (sStatus) {
+                case "EN_CURSO":
+                    return "Warning";
+                case "COMPLETADO":
+                    return "Success";
+                case "CANCELADO":
+                    return "None";
+                case "RECHAZADO":
+                    return "Error";
+                default:
+                    return "None";
+            }
         },
-        fechaLog05: function (fecha) {
-            return fecha.substring(6, 8) + "/" + fecha.substring(4, 6) + "/" + fecha.substring(0, 4);
+
+        formatStatusIcon: function (sStatus) {
+            switch (sStatus) {
+                case "EN_CURSO":
+                    return "sap-icon://pending";
+                case "COMPLETADO":
+                    return "sap-icon://complete";
+                case "CANCELADO":
+                    return "sap-icon://cancel";
+                case "RECHAZADO":
+                    return "sap-icon://decline";
+                default:
+                    return "sap-icon://status-inactive";
+            }
         },
-        fechaLog08: function (fecha) {
-            return fecha.substring(6, 8) + "/" + fecha.substring(4, 6) + "/" + fecha.substring(0, 4);
+
+        formatDateToYYYYMMDD: function (dateString) {
+
+            if (!dateString || dateString === null || dateString === "null") {
+                return "";
+            }
+
+            const date = new Date(dateString);
+
+            if (isNaN(date.getTime())) {
+                return "";
+            }
+
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            const formattedDate = `${year}-${month}-${day}`;
+
+            return formattedDate;
+        },
+
+        // Texto en Mayusculas    
+        formatUpperCase: function (sValue) {
+            return sValue ? sValue.toUpperCase() : "";
+        },
+        //  texto primera letra en mayuscula
+        formatCapitalize: function (sValue) {
+            if (!sValue) return "";
+            return sValue.charAt(0).toUpperCase() + sValue.slice(1).toLowerCase();
+        },
+
+        formatTimeAgo: function (dateValue) {
+            if (!dateValue) return "";
+
+            try {
+
+                const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+
+                // Verificar que la fecha sea válida
+                if (isNaN(date.getTime())) {
+                    return "";
+                }
+
+                const now = new Date();
+                const diffInMs = now - date;
+
+                // Si la fecha es futura, manejar diferente
+                if (diffInMs < 0) {
+                    return "En el futuro";
+                }
+
+                const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+                // Solo días en adelante
+                if (diffInDays === 0) return "Hoy";
+                if (diffInDays === 1) return "Ayer";
+                if (diffInDays < 7) return `Hace ${diffInDays} días`;
+
+                // Semanas
+                const diffInWeeks = Math.floor(diffInDays / 7);
+                if (diffInDays < 30) return `Hace ${diffInWeeks} semana${diffInWeeks > 1 ? 's' : ''}`;
+
+                // Meses
+                const diffInMonths = Math.floor(diffInDays / 30);
+                if (diffInDays < 365) return `Hace ${diffInMonths} mes${diffInMonths > 1 ? 'es' : ''}`;
+
+                // Años
+                const diffInYears = Math.floor(diffInDays / 365);
+                return `Hace ${diffInYears} año${diffInYears > 1 ? 's' : ''}`;
+
+            } catch (e) {
+                console.error("Error en formatTimeAgo:", e);
+                return "";
+            }
         },
         numberUnitDecimalExit: function (sValue, sCurrency) {
             if (!sValue) {

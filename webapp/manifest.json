@@ -24,15 +24,6 @@
           "localUri": "localService/mainService/metadata.xml",
           "odataVersion": "2.0"
         }
-      },
-      "cust_INETUM_SOL_DM_0001": {
-        "uri": "/odata/v2/cust_INETUM_SOL_DM_0001/",
-        "type": "OData",
-        "settings": {
-          "annotations": [],
-          "localUri": "localService/cust_INETUM_SOL_DM_0001/metadata.xml",
-          "odataVersion": "2.0"
-        }
       }
     },
     "crossNavigation": {
@@ -93,11 +84,6 @@
       "modeloLocal": {
         "type": "sap.ui.model.json.JSONModel",
         "uri": "model/modeloLocal.json"
-      },
-      "cust_INETUM_SOL_DM_0001": {
-        "dataSource": "cust_INETUM_SOL_DM_0001",
-        "preload": true,
-        "settings": {}
       }
     },
     "resources": {

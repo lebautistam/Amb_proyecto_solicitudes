@@ -80,5 +80,31 @@
             "cust_activeStep": false,
             "cust_aprobUser": "SFADMIN_LBM"
         }
-    ]
+    ],
+    "mensajes": {
+        "E2": {
+            "E1": "Error de tipo de archivo",
+            "tipo": "error"
+        },
+        "I1": {
+            "I1": "Aceptación de crear solicitud ",
+            "tipo": "info"
+        },
+        "I2": {
+            "I2": "Aceptación de aprobar solicitud",
+            "tipo": "info"
+        },
+        "I3": {
+            "I3": "Cancelación de solicitud ",
+            "tipo": "info"
+        },
+        "I4": {
+            "I4": "Retroceder de solicitud ",
+            "tipo": "info"
+        },
+        "I5": {
+            "I5": "Devolver solicitud ",
+            "tipo": "info"
+        }
+    }
 }
