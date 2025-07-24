@@ -51,7 +51,9 @@ sap.ui.define([
             }
             return parseFloat(sValue).toFixed(2);
         },
-
+        inCourse: function (cust_status) {
+            return cust_status === 'EC';
+        },
         formatStatusState: function (sStatus) {
             switch (sStatus) {
                 case "EN_CURSO":

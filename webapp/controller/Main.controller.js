@@ -109,13 +109,19 @@ sap.ui.define([
             //       }
             //     })
             // }
-            oModel.read("/cust_INETUM_SOL_DM_0001", {
-              success: (oData, oResponse) => {
-                console.log(oData, oResponse)
-              },
-              error: oError => {
-                console.log(oError)
-              }
+            const oFilterSimple = new Filter("PickListV2_id", FilterOperator.EQ, "INETUM_SOL_P_0007");
+            oModel.read("/cust_INETUM_SOL_DM_0003", {
+                // urlParameters: {
+                //     "$expand": "cust_solFields",
+                //     // "$filters": "key eq 'A'"
+                // },
+                // filters: [oFilterSimple],
+                success: (oData, oResponse) => {
+                    console.log(oData, oResponse)
+                },
+                error: oError => {
+                    console.log(oError)
+                }
             })
             // console.log(aRecords)
         },
@@ -171,8 +177,7 @@ sap.ui.define([
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
             let oModel = this.getOwnerComponent().getModel("modeloLocal");
-            let oModelApi = this.getOwnerComponent().getModel();
-            let oModelViewTable = this.getView().getModel("cust_INETUM_SOL_DM_0001");
+            let oModelApi = this.getView().getModel();
             let oModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
             let oMensajes = oModel.getProperty("/mensajes");
             let sMessage = oMensajes.I2.I2;
@@ -183,94 +188,293 @@ sap.ui.define([
                 emphasizedAction: sAccept,
 
             };
-            console.log(oContext)
-            // Mostrar el pop-up de confirmación
-            utils.onShowMessage(sMessage, oMensajes.I2.tipo,
-                function (oAction) {
-                    if (oAction === sAccept) {
-                        let cust_activeStep
-                        oContext.cust_steps.results.forEach(element => {
-                            if (element.cust_seqStep == oContext.cust_indexStep) {
-                                let oKey = oModelApi.createKey('/cust_INETUM_SOL_DM_0002', {
-                                    cust_INETUM_SOL_DM_0001_effectiveStartDate: element.cust_INETUM_SOL_DM_0001_effectiveStartDate,
-                                    cust_INETUM_SOL_DM_0001_externalCode: element.cust_INETUM_SOL_DM_0001_externalCode,
-                                    externalCode: element.externalCode
-                                });
+            let callFuntion = function (oAction) {
+                if (oAction === sAccept) {
+                    let cust_activeStep = '';
+                    let oFechaActual = new Date();
+                    let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
+                    let oKeyDM0002;
+                    let oKeyDM0001;
+                    let oPayloadPrincipal = {};
+                    let bStep;
+                    const sGroupId = "updateStepsBatch";
+                    oModelApi.setDeferredGroups([sGroupId]);
+
+                    if (oContext.cust_indexStep <= oContext.cust_maxStep) {
+                        bStep = true;
+                    } else if (oContext.cust_indexStep > oContext.cust_maxStep) {
+                        bStep = false;
+                    }
+                    oContext.cust_steps.results.forEach(element => {
+                        if (bStep) {
+                            if ((element.cust_seqStep == oContext.cust_indexStep)) {
+                                cust_activeStep = false;
+                            } else if (element.cust_seqStep == (oContext.cust_indexStep + 1)) {
                                 cust_activeStep = true;
-                                service.updateDataERP(oKey, oModelApi, { cust_activeStep })
-                                    .then(data => {
-
-                                    })
-                                    .catch(error => {
-                                        console.error("Error: ", error.message);
-                                    });
-                                this._getMainDataEntity();
-                                MessageToast.show('ok');
                             }
-                        });;
-                    } else if (oAction === sCancel) {
-                        MessageToast.show("Acción cancelada.");
-                    }
-                }.bind(this), oProperties
-            );
+                        } else {
+                            cust_activeStep = false;
+                        }
+                        if (typeof cust_activeStep === "boolean") {
+                            oKeyDM0002 = oModelApi.createKey('/cust_INETUM_SOL_DM_0002', {
+                                cust_INETUM_SOL_DM_0001_effectiveStartDate: element.cust_INETUM_SOL_DM_0001_effectiveStartDate,
+                                cust_INETUM_SOL_DM_0001_externalCode: element.cust_INETUM_SOL_DM_0001_externalCode,
+                                externalCode: element.externalCode
+                            });
+                            oModelApi.update(oKeyDM0002, { cust_activeStep }, {
+                                groupId: sGroupId
+                            });
+                        }
+                    });
+                    oPayloadPrincipal = {
+                        cust_indexStep: (bStep ? (oContext.cust_indexStep + 1) : 0),
+                        cust_fechaAct: sFechaFormatoOData,
+                        ...(!bStep && { cust_status: 'CO' })
+                    };
+                    oKeyDM0001 = oModelApi.createKey('/cust_INETUM_SOL_DM_0001', {
+                        effectiveStartDate: oContext.effectiveStartDate,
+                        externalCode: oContext.externalCode
+                    });
+                    oModelApi.update(oKeyDM0001, oPayloadPrincipal, {
+                        groupId: sGroupId
+                    });
+                    oModelApi.submitChanges({
+                        groupId: sGroupId,
+                        success: (oData, oResponse) => {
+                            MessageToast.show('Actualización completada con éxito.');
+                            this._getMainDataEntity();
+                        },
+                        error: oError => {
+                            MessageBox.error("Ocurrió un error durante la actualización en lote.");
+                            console.error("Error en lote:", oError);
+                        }
+                    });
+                } else if (oAction === sCancel) {
+                    MessageToast.show("Acción cancelada.");
+                }
+            }.bind(this);
+
+            utils.onShowMessage(sMessage, oMensajes.I2.tipo, callFuntion, oProperties);
 
         },
-        onReject: function () {
-            var sMessage = "Estás a punto de aprobar la(s) solicitud(es) seleccionada(s). ¿Deseas continuar?";
-            var sTitle = "Confirmación de Aprobación";
+        onReject: function (oEvent) {
+            let oButton = oEvent.getSource()
+            let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
+            let oModel = this.getOwnerComponent().getModel("modeloLocal");
+            let oModelApi = this.getView().getModel();
+            let oModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
+            let oMensajes = oModel.getProperty("/mensajes");
+            let sMessage = oMensajes.I3.I3;
+            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
+            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
+            let oProperties = {
+                actions: [sAccept, sCancel],
+                emphasizedAction: sAccept,
 
-            // Mostrar el pop-up de confirmación
-            MessageBox.confirm(sMessage, {
-                title: sTitle,
-                actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
-                emphasizedAction: MessageBox.Action.OK,
-                // details: "Esta acción no se puede deshacer.", // Opcional: Información adicional detallada
-                onClose: function (oAction) {
-                    if (oAction === MessageBox.Action.OK) {
-                        MessageToast.show("¡Confirmado! Procediendo con la aprobación.");
-                    } else if (oAction === MessageBox.Action.CANCEL) {
-                        MessageToast.show("Acción cancelada.");
-                    }
-                }.bind(this)
-            });
+            };
+            let callFuntion = function (oAction) {
+                if (oAction === sAccept) {
+                    let cust_activeStep = false;
+                    let oKeyDM0002;
+                    let oKeyDM0001;
+                    let oPayloadPrincipal = {};
+                    const sGroupId = "updateStepsBatchCancel";
+                    oModelApi.setDeferredGroups([sGroupId]);
+
+                    oContext.cust_steps.results.forEach(element => {
+                        oKeyDM0002 = oModelApi.createKey('/cust_INETUM_SOL_DM_0002', {
+                            cust_INETUM_SOL_DM_0001_effectiveStartDate: element.cust_INETUM_SOL_DM_0001_effectiveStartDate,
+                            cust_INETUM_SOL_DM_0001_externalCode: element.cust_INETUM_SOL_DM_0001_externalCode,
+                            externalCode: element.externalCode
+                        });
+                        oModelApi.update(oKeyDM0002, { cust_activeStep }, {
+                            groupId: sGroupId
+                        });
+                    });
+                    oPayloadPrincipal = {
+                        cust_indexStep: 0,
+                        // cust_fechaAct: sFechaFormatoOData,
+                        cust_status: 'CA'
+                    };
+                    oKeyDM0001 = oModelApi.createKey('/cust_INETUM_SOL_DM_0001', {
+                        effectiveStartDate: oContext.effectiveStartDate,
+                        externalCode: oContext.externalCode
+                    });
+                    oModelApi.update(oKeyDM0001, oPayloadPrincipal, {
+                        groupId: sGroupId
+                    });
+                    oModelApi.submitChanges({
+                        groupId: sGroupId,
+                        success: (oData, oResponse) => {
+                            MessageToast.show('Actualización completada con éxito.');
+                            this._getMainDataEntity();
+                        },
+                        error: oError => {
+                            MessageBox.error("Ocurrió un error durante la actualización en lote.");
+                            console.error("Error en lote:", oError);
+                        }
+                    });
+                } else if (oAction === sCancel) {
+                    MessageToast.show("Acción cancelada.");
+                }
+            }.bind(this);
+            utils.onShowMessage(sMessage, oMensajes.I3.tipo, callFuntion, oProperties);
         },
-        onReturn1: function () {
-            var sMessage = "Estás a punto de aprobar la(s) solicitud(es) seleccionada(s). ¿Deseas continuar?";
-            var sTitle = "Confirmación de Aprobación";
+        onReturn: function (oEvent) {
+            let oButton = oEvent.getSource()
+            let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
+            let oModel = this.getOwnerComponent().getModel("modeloLocal");
+            let oModelApi = this.getView().getModel();
+            let oModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
+            let oMensajes = oModel.getProperty("/mensajes");
+            let sMessage = oMensajes.I4.I4;
+            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
+            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
+            let oProperties = {
+                actions: [sAccept, sCancel],
+                emphasizedAction: sAccept,
 
-            // Mostrar el pop-up de confirmación
-            MessageBox.confirm(sMessage, {
-                title: sTitle,
-                actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
-                emphasizedAction: MessageBox.Action.OK,
-                // details: "Esta acción no se puede deshacer.", // Opcional: Información adicional detallada
-                onClose: function (oAction) {
-                    if (oAction === MessageBox.Action.OK) {
-                        MessageToast.show("¡Confirmado! Procediendo con la aprobación.");
-                    } else if (oAction === MessageBox.Action.CANCEL) {
-                        MessageToast.show("Acción cancelada.");
-                    }
-                }.bind(this)
-            });
+            };
+            console.log(oContext)
+            let callFuntion = function (oAction) {
+                if (oAction === sAccept) {
+                    let cust_activeStep = '';
+                    let oFechaActual = new Date();
+                    let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
+                    let oKeyDM0002;
+                    let oKeyDM0001;
+                    let oPayloadPrincipal = {};
+                    const sGroupId = "updateStepsBatchReturn1";
+                    oModelApi.setDeferredGroups([sGroupId]);
+
+                    oContext.cust_steps.results.forEach(element => {
+                        if ((element.cust_seqStep == oContext.cust_indexStep)) {
+                            cust_activeStep = false;
+                        } else if (element.cust_seqStep == (oContext.cust_indexStep - 1)) {
+                            cust_activeStep = true;
+                        }
+                        if (typeof cust_activeStep === "boolean") {
+                            oKeyDM0002 = oModelApi.createKey('/cust_INETUM_SOL_DM_0002', {
+                                cust_INETUM_SOL_DM_0001_effectiveStartDate: element.cust_INETUM_SOL_DM_0001_effectiveStartDate,
+                                cust_INETUM_SOL_DM_0001_externalCode: element.cust_INETUM_SOL_DM_0001_externalCode,
+                                externalCode: element.externalCode
+                            });
+                            oModelApi.update(oKeyDM0002, { cust_activeStep }, {
+                                groupId: sGroupId
+                            });
+                        }
+                    });
+                    oPayloadPrincipal = {
+                        cust_indexStep: (oContext.cust_indexStep - 1),
+                        cust_fechaAct: sFechaFormatoOData
+                    };
+                    oKeyDM0001 = oModelApi.createKey('/cust_INETUM_SOL_DM_0001', {
+                        effectiveStartDate: oContext.effectiveStartDate,
+                        externalCode: oContext.externalCode
+                    });
+                    oModelApi.update(oKeyDM0001, oPayloadPrincipal, {
+                        groupId: sGroupId
+                    });
+                    oModelApi.submitChanges({
+                        groupId: sGroupId,
+                        success: (oData, oResponse) => {
+                            MessageToast.show('Actualización completada con éxito.');
+                            this._getMainDataEntity();
+                        },
+                        error: oError => {
+                            MessageBox.error("Ocurrió un error durante la actualización en lote.");
+                            console.error("Error en lote:", oError);
+                        }
+                    });
+                } else if (oAction === sCancel) {
+                    MessageToast.show("Acción cancelada.");
+                }
+            }.bind(this);
+
+            utils.onShowMessage(sMessage, oMensajes.I4.tipo, callFuntion, oProperties);
         },
-        onReturn: function () {
-            var sMessage = "Estás a punto de aprobar la(s) solicitud(es) seleccionada(s). ¿Deseas continuar?";
-            var sTitle = "Confirmación de Aprobación";
+        onBack: function (oEvent) {
+            let oButton = oEvent.getSource()
+            let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
+            let oModel = this.getOwnerComponent().getModel("modeloLocal");
+            let oModelApi = this.getView().getModel();
+            let oModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
+            let oMensajes = oModel.getProperty("/mensajes");
+            let sMessage = oMensajes.I5.I5;
+            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
+            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
+            let oProperties = {
+                actions: [sAccept, sCancel],
+                emphasizedAction: sAccept,
 
-            // Mostrar el pop-up de confirmación
-            MessageBox.confirm(sMessage, {
-                title: sTitle,
-                actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
-                emphasizedAction: MessageBox.Action.OK,
-                // details: "Esta acción no se puede deshacer.", // Opcional: Información adicional detallada
-                onClose: function (oAction) {
-                    if (oAction === MessageBox.Action.OK) {
-                        MessageToast.show("¡Confirmado! Procediendo con la aprobación.");
-                    } else if (oAction === MessageBox.Action.CANCEL) {
-                        MessageToast.show("Acción cancelada.");
-                    }
-                }.bind(this)
+            };
+            console.log(oContext)
+            let callFuntion = function (oAction) {
+                if (oAction === sAccept) {
+                    let cust_activeStep = '';
+                    let oFechaActual = new Date();
+                    let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
+                    let oKeyDM0002;
+                    let oKeyDM0001;
+                    let oPayloadPrincipal = {};
+                    const sGroupId = "updateStepsBatchBack";
+                    oModelApi.setDeferredGroups([sGroupId]);
+
+                    oContext.cust_steps.results.forEach(element => {
+                        if ((element.cust_seqStep == oContext.cust_indexStep)) {
+                            cust_activeStep = false;
+                        } else if (element.cust_seqStep == 1) {
+                            cust_activeStep = true;
+                        }
+                        if (typeof cust_activeStep === "boolean") {
+                            oKeyDM0002 = oModelApi.createKey('/cust_INETUM_SOL_DM_0002', {
+                                cust_INETUM_SOL_DM_0001_effectiveStartDate: element.cust_INETUM_SOL_DM_0001_effectiveStartDate,
+                                cust_INETUM_SOL_DM_0001_externalCode: element.cust_INETUM_SOL_DM_0001_externalCode,
+                                externalCode: element.externalCode
+                            });
+                            oModelApi.update(oKeyDM0002, { cust_activeStep }, {
+                                groupId: sGroupId
+                            });
+                        }
+                    });
+                    oPayloadPrincipal = {
+                        cust_indexStep: 1,
+                        cust_fechaAct: sFechaFormatoOData
+                    };
+                    oKeyDM0001 = oModelApi.createKey('/cust_INETUM_SOL_DM_0001', {
+                        effectiveStartDate: oContext.effectiveStartDate,
+                        externalCode: oContext.externalCode
+                    });
+                    oModelApi.update(oKeyDM0001, oPayloadPrincipal, {
+                        groupId: sGroupId
+                    });
+                    oModelApi.submitChanges({
+                        groupId: sGroupId,
+                        success: (oData, oResponse) => {
+                            MessageToast.show('Actualización completada con éxito.');
+                            this._getMainDataEntity();
+                        },
+                        error: oError => {
+                            MessageBox.error("Ocurrió un error durante la actualización en lote.");
+                            console.error("Error en lote:", oError);
+                        }
+                    });
+                } else if (oAction === sCancel) {
+                    MessageToast.show("Acción cancelada.");
+                }
+            }.bind(this);
+
+            utils.onShowMessage(sMessage, oMensajes.I5.tipo, callFuntion, oProperties);
+        },
+        onDetailRequest: function (oEvent) {
+            let oButton = oEvent.getSource()
+            let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001");
+
+            this.getOwnerComponent().getRouter().navTo("RouteVisualizacionSolicitud", {
+                externalCode: oContext.getProperty("externalCode"),
+                effectiveStartDate: oContext.getProperty("effectiveStartDate").getTime()
             });
+
         },
         _updateTableCount: function () {
             var oTable = this.byId("requestsTable");
@@ -402,12 +606,12 @@ sap.ui.define([
             oModel.read("/cust_INETUM_SOL_DM_0001", {
                 urlParameters: {
                     "$expand": "cust_steps",
-                    "$select": "effectiveStartDate,externalCode,cust_solicitante,cust_fechaSol,cust_deadLine,cust_steps,cust_indexStep,cust_maxStep"
+                    "$select": "effectiveStartDate,externalCode,cust_solicitante,cust_fechaSol,cust_deadLine,cust_steps,cust_indexStep,cust_maxStep,cust_status"
                 },
                 success: (oData, oResponse) => {
                     oData.results.forEach(element => {
                         if (element.cust_steps.results.length > 0) {
-                            
+
                             let filter = element.cust_steps.results.filter(step => step.cust_aprobUser == "SFADMIN_LBM" && step.cust_activeStep == false);
                             if (filter.length) {
                                 let oKey = oModel.createKey('/cust_INETUM_SOL_C_0000', {

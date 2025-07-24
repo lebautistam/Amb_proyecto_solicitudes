@@ -1,0 +1,51 @@
+<mvc:View
+    controllerName="com.amb.ambpendiapro.controller.VisualizarSolicitud"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form">
+
+    <Page id="pageVisualizar" title="{i18n>title}">
+        <ScrollContainer id="scroll" height="100%" vertical="true">
+            <VBox id="formContainer" class="sapUiSmallMargin">
+                <f:Form id="FormToolbar" editable="true" ariaLabelledBy="Title1">
+                    <f:toolbar>
+                        <Toolbar id="_IDGenToolbar1">
+                            <Title id="Title1" text="Solicitud" />
+                            <ToolbarSpacer id="_IDGenToolbarSpacer" />
+                        </Toolbar>
+                    </f:toolbar>
+
+                    <f:layout>
+                        <f:ResponsiveGridLayout
+                            id="_IDGenResponsiveGridLayout"
+                            labelSpanXL="4"
+                            labelSpanL="3"
+                            labelSpanM="4"
+                            labelSpanS="12"
+                            adjustLabelSpan="false"
+                            emptySpanXL="4"
+                            emptySpanL="4"
+                            emptySpanM="2"
+                            emptySpanS="0"
+                            columnsXL="1"
+                            columnsL="1"
+                            columnsM="1"
+                            singleContainerFullSize="false" />
+                    </f:layout>
+
+                    <f:FormContainer id="FormularioDinamico_visualizacion" ariaLabelledBy="Title1" />
+                </f:Form>
+            </VBox>
+        </ScrollContainer>
+
+        <footer>
+            <Bar id="_IDGenBar">
+                <contentRight>
+                    <Button id="_IDGenButton" text="Enviar" type="Emphasized" press="onEnviar" />
+                    <Button id="_IDGenButton1" text="Cancelar" press="onCancelar" />
+                </contentRight>
+            </Bar>
+        </footer>
+    </Page>
+
+</mvc:View>

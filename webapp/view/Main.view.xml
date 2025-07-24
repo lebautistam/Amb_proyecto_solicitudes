@@ -25,7 +25,7 @@
                     enableCellFilter="{modeloLocal>/cellFilterOn}"
                     filter="filterGlobally"
                     width="auto"
-                    busy="{busy>/tableBusy}" busyIndicatorDelay="0" busyIndicatorSize="Medium"
+                    busy="{busy>/tableBusy}" busyIndicatorDelay="0" busyIndicatorSize="Large"
                     >
                     <extension>
                         <m:OverflowToolbar style="Clear">
@@ -104,23 +104,28 @@
                                         type="Reject"
                                         tooltip="Rechazar"
                                         press=".onReject"
-                                        class="sapUiNoMarginEnd sap-icon-color-negative" />
+                                        class="sapUiNoMarginEnd sap-icon-color-negative" 
+                                        visible="{
+                                                    path: 'cust_INETUM_SOL_DM_0001>cust_status',  
+                                                    formatter: '.formatter.inCourse'
+                                                 }"
+                                        />
                                     <m:Button
                                         icon="sap-icon://arrow-left"
                                         type="Neutral"
                                         tooltip="Retroceder"
-                                        press=".onReturn1"
+                                        press=".onReturn"
                                         class="sapUiNoMarginEnd sap-icon-color-negative" />
                                     <m:Button
                                         icon="sap-icon://display"
                                         type="Transparent"
                                         tooltip="Ver Detalle"
-                                        press=".onDetail" />
+                                        press=".onDetailRequest" />
                                     <m:Button
                                         icon="sap-icon://undo"
                                         type="Attention"
                                         tooltip="Devolver"
-                                        press=".onReturn"
+                                        press=".onBack"
                                         class="sapUiNoMarginEnd" />
                                 </m:OverflowToolbar>
                             </template>
