@@ -85,6 +85,74 @@ sap.ui.define([
                 });
             });
         },
+        /**
+         * Llama a una Function Import de OData.
+         * @param {sap.ui.model.odata.v2.ODataModel} oModel - El modelo OData del servicio.
+         * @param {string} sFunctionName - El nombre de la Function Import.
+         * @param {object} [mParameters] - Parámetros opcionales.
+         * @param {'GET'|'POST'} [mParameters.method="GET"] - El método HTTP a usar.
+         * @param {object} [mParameters.urlParameters] - Parámetros para la URL.
+         * @param {object} [mParameters.payload] - El payload para las llamadas POST.
+         * @returns {Promise<object>} Una promesa que se resuelve con el resultado de la función.
+         */
+        callFunction: function (oModel, sFunctionName, mParameters) {
+            return new Promise((resolve, reject) => {
+                oModel.callFunction(sFunctionName, {
+                    method: mParameters?.method || "GET",
+                    urlParameters: mParameters?.urlParameters,
+                    payload: mParameters?.payload,
+                    success: (oData) => resolve(oData),
+                    error: (oError) => reject(oError)
+                });
+            });
+        },
+
+        /**
+         * Ejecuta múltiples operaciones (crear, actualizar, eliminar) en un solo lote (batch).
+         * Es la función más flexible para operaciones en lote.
+         * @param {sap.ui.model.odata.v2.ODataModel} oModel - El modelo OData del servicio.
+         * @param {object[]} aOperations - Un array de objetos, cada uno definiendo una operación.
+         * @param {'create'|'update'|'remove'} aOperations[].type - El tipo de operación.
+         * @param {string} aOperations[].path - La entidad para 'create' o la ruta clave para 'update'/'remove'.
+         * @param {object} [aOperations[].payload] - El payload de datos para 'create' o 'update'.
+         * @returns {Promise<object>} Una promesa que se resuelve cuando el lote se completa.
+         */
+        executeBatch: function (oModel, aOperations) {
+            return new Promise((resolve, reject) => {
+                // Asegúrate de que el modelo esté configurado para usar lotes
+                oModel.setUseBatch(true);
+                const sDeferredGroupId = `batch_${new Date().getTime()}`;
+                oModel.setDeferredGroups([sDeferredGroupId]);
+
+                aOperations.forEach(op => {
+                    switch (op.type) {
+                        case "create":
+                            oModel.create(op.path, op.payload, {
+                                groupId: sDeferredGroupId
+                            });
+                            break;
+                        case "update":
+                            oModel.update(op.path, op.payload, {
+                                groupId: sDeferredGroupId
+                            });
+                            break;
+                        case "remove":
+                            oModel.remove(op.path, {
+                                groupId: sDeferredGroupId
+                            });
+                            break;
+                        default:
+                            console.error(`Tipo de operación en lote no soportada: ${op.type}`);
+                    }
+                });
+
+                oModel.submitChanges({
+                    groupId: sDeferredGroupId,
+                    success: (oData) => resolve(oData),
+                    error: (oError) => reject(oError)
+                });
+            });
+        }
 
     };
 });

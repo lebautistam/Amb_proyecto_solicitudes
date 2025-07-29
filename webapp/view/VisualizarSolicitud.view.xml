@@ -41,8 +41,11 @@
         <footer>
             <Bar id="_IDGenBar">
                 <contentRight>
-                    <Button id="_IDGenButton" text="Enviar" type="Emphasized" press="onEnviar" />
-                    <Button id="_IDGenButton1" text="Cancelar" press="onCancelar" />
+                    <Button id="_IDGenButton" text="Devolver" type="Emphasized" press="onBack" />
+                    <Button id="_IDGenButton1" text="Aprobar" type="Emphasized" press="onApprove" />
+                    <Button id="_IDGenButton2" text="Rechazar" type="Emphasized" press="onReject" />
+                    <Button id="_IDGenButton3" text="Retroceder" type="Emphasized" press="onReturn" />
+                    <Button id="_IDGenButton4" text="Cancelar" press="onCancel" />
                 </contentRight>
             </Bar>
         </footer>

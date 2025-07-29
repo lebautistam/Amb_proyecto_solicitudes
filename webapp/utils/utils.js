@@ -4,7 +4,7 @@ sap.ui.define([
     "sap/ui/core/BusyIndicator",
 
 ], function (MessageBox, MessageToast, BusyIndicator) {
-    "use srtict";
+    "use strict";
 
     return {
         console: console,

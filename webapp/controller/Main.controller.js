@@ -11,18 +11,19 @@ sap.ui.define([
     "sap/m/MessageToast",
     "../model/formatter",
     "../service/service",
-    "../utils/utils"
-], (Controller, Log, JSONModel, Filter, FilterOperator, DateFormat, ToolbarSpacer, jQuery, MessageBox, MessageToast, formatter, service, utils) => {
+    "../utils/utils",
+    "../utils/Operaciones"
+], (Controller, Log, JSONModel, Filter, FilterOperator, DateFormat, ToolbarSpacer, jQuery, MessageBox, MessageToast, formatter, service, utils, Operaciones) => {
     "use strict";
 
     return Controller.extend("com.amb.ambpendiapro.controller.Main", {
         formatter: formatter,
-        vto: '',
         onInit() {
             var sLanguage = sap.ui.getCore().getConfiguration().getLanguage();
             console.log(sLanguage);
             this._loadUserInfo();
             this._requestBusy();
+            this._cargarListaDeSolicitudes();
             // this._getRowsTable();
             let oViewModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
             let oViewModelDM0001 = this.getView().getModel("cust_INETUM_SOL_DM_0001");
@@ -109,13 +110,17 @@ sap.ui.define([
             //       }
             //     })
             // }
-            const oFilterSimple = new Filter("PickListV2_id", FilterOperator.EQ, "INETUM_SOL_P_0007");
-            oModel.read("/cust_INETUM_SOL_DM_0003", {
+            const oFilterSimple = new Filter("PickListV2_id", FilterOperator.EQ, "INETUM_SOL_P_0008");
+            oModel.read("/PickListValueV2", {
                 // urlParameters: {
-                //     "$expand": "cust_solFields",
+                //     "$expand": "cust_solFields/cust_fieldNav,cust_steps,cust_objectNav/parentPickListValueNav,cust_tipoObjectNav",
                 //     // "$filters": "key eq 'A'"
                 // },
-                // filters: [oFilterSimple],
+                urlParameters: {
+                    "$expand": "parentPickListValueNav",
+                    // "$filters": "key eq 'A'"
+                },
+                filters: [oFilterSimple],
                 success: (oData, oResponse) => {
                     console.log(oData, oResponse)
                 },
@@ -176,295 +181,22 @@ sap.ui.define([
         onApprove: function (oEvent) {
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
-            let oModel = this.getOwnerComponent().getModel("modeloLocal");
-            let oModelApi = this.getView().getModel();
-            let oModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
-            let oMensajes = oModel.getProperty("/mensajes");
-            let sMessage = oMensajes.I2.I2;
-            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
-            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
-            let oProperties = {
-                actions: [sAccept, sCancel],
-                emphasizedAction: sAccept,
-
-            };
-            let callFuntion = function (oAction) {
-                if (oAction === sAccept) {
-                    let cust_activeStep = '';
-                    let oFechaActual = new Date();
-                    let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
-                    let oKeyDM0002;
-                    let oKeyDM0001;
-                    let oPayloadPrincipal = {};
-                    let bStep;
-                    const sGroupId = "updateStepsBatch";
-                    oModelApi.setDeferredGroups([sGroupId]);
-
-                    if (oContext.cust_indexStep <= oContext.cust_maxStep) {
-                        bStep = true;
-                    } else if (oContext.cust_indexStep > oContext.cust_maxStep) {
-                        bStep = false;
-                    }
-                    oContext.cust_steps.results.forEach(element => {
-                        if (bStep) {
-                            if ((element.cust_seqStep == oContext.cust_indexStep)) {
-                                cust_activeStep = false;
-                            } else if (element.cust_seqStep == (oContext.cust_indexStep + 1)) {
-                                cust_activeStep = true;
-                            }
-                        } else {
-                            cust_activeStep = false;
-                        }
-                        if (typeof cust_activeStep === "boolean") {
-                            oKeyDM0002 = oModelApi.createKey('/cust_INETUM_SOL_DM_0002', {
-                                cust_INETUM_SOL_DM_0001_effectiveStartDate: element.cust_INETUM_SOL_DM_0001_effectiveStartDate,
-                                cust_INETUM_SOL_DM_0001_externalCode: element.cust_INETUM_SOL_DM_0001_externalCode,
-                                externalCode: element.externalCode
-                            });
-                            oModelApi.update(oKeyDM0002, { cust_activeStep }, {
-                                groupId: sGroupId
-                            });
-                        }
-                    });
-                    oPayloadPrincipal = {
-                        cust_indexStep: (bStep ? (oContext.cust_indexStep + 1) : 0),
-                        cust_fechaAct: sFechaFormatoOData,
-                        ...(!bStep && { cust_status: 'CO' })
-                    };
-                    oKeyDM0001 = oModelApi.createKey('/cust_INETUM_SOL_DM_0001', {
-                        effectiveStartDate: oContext.effectiveStartDate,
-                        externalCode: oContext.externalCode
-                    });
-                    oModelApi.update(oKeyDM0001, oPayloadPrincipal, {
-                        groupId: sGroupId
-                    });
-                    oModelApi.submitChanges({
-                        groupId: sGroupId,
-                        success: (oData, oResponse) => {
-                            MessageToast.show('Actualización completada con éxito.');
-                            this._getMainDataEntity();
-                        },
-                        error: oError => {
-                            MessageBox.error("Ocurrió un error durante la actualización en lote.");
-                            console.error("Error en lote:", oError);
-                        }
-                    });
-                } else if (oAction === sCancel) {
-                    MessageToast.show("Acción cancelada.");
-                }
-            }.bind(this);
-
-            utils.onShowMessage(sMessage, oMensajes.I2.tipo, callFuntion, oProperties);
-
+            Operaciones.actionApprove(oContext, this);
         },
         onReject: function (oEvent) {
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
-            let oModel = this.getOwnerComponent().getModel("modeloLocal");
-            let oModelApi = this.getView().getModel();
-            let oModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
-            let oMensajes = oModel.getProperty("/mensajes");
-            let sMessage = oMensajes.I3.I3;
-            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
-            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
-            let oProperties = {
-                actions: [sAccept, sCancel],
-                emphasizedAction: sAccept,
-
-            };
-            let callFuntion = function (oAction) {
-                if (oAction === sAccept) {
-                    let cust_activeStep = false;
-                    let oKeyDM0002;
-                    let oKeyDM0001;
-                    let oPayloadPrincipal = {};
-                    const sGroupId = "updateStepsBatchCancel";
-                    oModelApi.setDeferredGroups([sGroupId]);
-
-                    oContext.cust_steps.results.forEach(element => {
-                        oKeyDM0002 = oModelApi.createKey('/cust_INETUM_SOL_DM_0002', {
-                            cust_INETUM_SOL_DM_0001_effectiveStartDate: element.cust_INETUM_SOL_DM_0001_effectiveStartDate,
-                            cust_INETUM_SOL_DM_0001_externalCode: element.cust_INETUM_SOL_DM_0001_externalCode,
-                            externalCode: element.externalCode
-                        });
-                        oModelApi.update(oKeyDM0002, { cust_activeStep }, {
-                            groupId: sGroupId
-                        });
-                    });
-                    oPayloadPrincipal = {
-                        cust_indexStep: 0,
-                        // cust_fechaAct: sFechaFormatoOData,
-                        cust_status: 'CA'
-                    };
-                    oKeyDM0001 = oModelApi.createKey('/cust_INETUM_SOL_DM_0001', {
-                        effectiveStartDate: oContext.effectiveStartDate,
-                        externalCode: oContext.externalCode
-                    });
-                    oModelApi.update(oKeyDM0001, oPayloadPrincipal, {
-                        groupId: sGroupId
-                    });
-                    oModelApi.submitChanges({
-                        groupId: sGroupId,
-                        success: (oData, oResponse) => {
-                            MessageToast.show('Actualización completada con éxito.');
-                            this._getMainDataEntity();
-                        },
-                        error: oError => {
-                            MessageBox.error("Ocurrió un error durante la actualización en lote.");
-                            console.error("Error en lote:", oError);
-                        }
-                    });
-                } else if (oAction === sCancel) {
-                    MessageToast.show("Acción cancelada.");
-                }
-            }.bind(this);
-            utils.onShowMessage(sMessage, oMensajes.I3.tipo, callFuntion, oProperties);
+            Operaciones.actionReject(oContext, this);
         },
         onReturn: function (oEvent) {
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
-            let oModel = this.getOwnerComponent().getModel("modeloLocal");
-            let oModelApi = this.getView().getModel();
-            let oModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
-            let oMensajes = oModel.getProperty("/mensajes");
-            let sMessage = oMensajes.I4.I4;
-            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
-            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
-            let oProperties = {
-                actions: [sAccept, sCancel],
-                emphasizedAction: sAccept,
-
-            };
-            console.log(oContext)
-            let callFuntion = function (oAction) {
-                if (oAction === sAccept) {
-                    let cust_activeStep = '';
-                    let oFechaActual = new Date();
-                    let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
-                    let oKeyDM0002;
-                    let oKeyDM0001;
-                    let oPayloadPrincipal = {};
-                    const sGroupId = "updateStepsBatchReturn1";
-                    oModelApi.setDeferredGroups([sGroupId]);
-
-                    oContext.cust_steps.results.forEach(element => {
-                        if ((element.cust_seqStep == oContext.cust_indexStep)) {
-                            cust_activeStep = false;
-                        } else if (element.cust_seqStep == (oContext.cust_indexStep - 1)) {
-                            cust_activeStep = true;
-                        }
-                        if (typeof cust_activeStep === "boolean") {
-                            oKeyDM0002 = oModelApi.createKey('/cust_INETUM_SOL_DM_0002', {
-                                cust_INETUM_SOL_DM_0001_effectiveStartDate: element.cust_INETUM_SOL_DM_0001_effectiveStartDate,
-                                cust_INETUM_SOL_DM_0001_externalCode: element.cust_INETUM_SOL_DM_0001_externalCode,
-                                externalCode: element.externalCode
-                            });
-                            oModelApi.update(oKeyDM0002, { cust_activeStep }, {
-                                groupId: sGroupId
-                            });
-                        }
-                    });
-                    oPayloadPrincipal = {
-                        cust_indexStep: (oContext.cust_indexStep - 1),
-                        cust_fechaAct: sFechaFormatoOData
-                    };
-                    oKeyDM0001 = oModelApi.createKey('/cust_INETUM_SOL_DM_0001', {
-                        effectiveStartDate: oContext.effectiveStartDate,
-                        externalCode: oContext.externalCode
-                    });
-                    oModelApi.update(oKeyDM0001, oPayloadPrincipal, {
-                        groupId: sGroupId
-                    });
-                    oModelApi.submitChanges({
-                        groupId: sGroupId,
-                        success: (oData, oResponse) => {
-                            MessageToast.show('Actualización completada con éxito.');
-                            this._getMainDataEntity();
-                        },
-                        error: oError => {
-                            MessageBox.error("Ocurrió un error durante la actualización en lote.");
-                            console.error("Error en lote:", oError);
-                        }
-                    });
-                } else if (oAction === sCancel) {
-                    MessageToast.show("Acción cancelada.");
-                }
-            }.bind(this);
-
-            utils.onShowMessage(sMessage, oMensajes.I4.tipo, callFuntion, oProperties);
+            Operaciones.actionReturn(oContext, this);
         },
         onBack: function (oEvent) {
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
-            let oModel = this.getOwnerComponent().getModel("modeloLocal");
-            let oModelApi = this.getView().getModel();
-            let oModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
-            let oMensajes = oModel.getProperty("/mensajes");
-            let sMessage = oMensajes.I5.I5;
-            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
-            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
-            let oProperties = {
-                actions: [sAccept, sCancel],
-                emphasizedAction: sAccept,
-
-            };
-            console.log(oContext)
-            let callFuntion = function (oAction) {
-                if (oAction === sAccept) {
-                    let cust_activeStep = '';
-                    let oFechaActual = new Date();
-                    let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
-                    let oKeyDM0002;
-                    let oKeyDM0001;
-                    let oPayloadPrincipal = {};
-                    const sGroupId = "updateStepsBatchBack";
-                    oModelApi.setDeferredGroups([sGroupId]);
-
-                    oContext.cust_steps.results.forEach(element => {
-                        if ((element.cust_seqStep == oContext.cust_indexStep)) {
-                            cust_activeStep = false;
-                        } else if (element.cust_seqStep == 1) {
-                            cust_activeStep = true;
-                        }
-                        if (typeof cust_activeStep === "boolean") {
-                            oKeyDM0002 = oModelApi.createKey('/cust_INETUM_SOL_DM_0002', {
-                                cust_INETUM_SOL_DM_0001_effectiveStartDate: element.cust_INETUM_SOL_DM_0001_effectiveStartDate,
-                                cust_INETUM_SOL_DM_0001_externalCode: element.cust_INETUM_SOL_DM_0001_externalCode,
-                                externalCode: element.externalCode
-                            });
-                            oModelApi.update(oKeyDM0002, { cust_activeStep }, {
-                                groupId: sGroupId
-                            });
-                        }
-                    });
-                    oPayloadPrincipal = {
-                        cust_indexStep: 1,
-                        cust_fechaAct: sFechaFormatoOData
-                    };
-                    oKeyDM0001 = oModelApi.createKey('/cust_INETUM_SOL_DM_0001', {
-                        effectiveStartDate: oContext.effectiveStartDate,
-                        externalCode: oContext.externalCode
-                    });
-                    oModelApi.update(oKeyDM0001, oPayloadPrincipal, {
-                        groupId: sGroupId
-                    });
-                    oModelApi.submitChanges({
-                        groupId: sGroupId,
-                        success: (oData, oResponse) => {
-                            MessageToast.show('Actualización completada con éxito.');
-                            this._getMainDataEntity();
-                        },
-                        error: oError => {
-                            MessageBox.error("Ocurrió un error durante la actualización en lote.");
-                            console.error("Error en lote:", oError);
-                        }
-                    });
-                } else if (oAction === sCancel) {
-                    MessageToast.show("Acción cancelada.");
-                }
-            }.bind(this);
-
-            utils.onShowMessage(sMessage, oMensajes.I5.tipo, callFuntion, oProperties);
+            Operaciones.actionBack(oContext, this);
         },
         onDetailRequest: function (oEvent) {
             let oButton = oEvent.getSource()
@@ -472,9 +204,22 @@ sap.ui.define([
 
             this.getOwnerComponent().getRouter().navTo("RouteVisualizacionSolicitud", {
                 externalCode: oContext.getProperty("externalCode"),
-                effectiveStartDate: oContext.getProperty("effectiveStartDate").getTime()
+                effectiveStartDate: oContext.getProperty("effectiveStartDate").getTime(),
+                cust_object: oContext.cust_object
             });
 
+        },
+        _managementRouter: function () {
+            this.getOwnerComponent().getRoute("RoutelistaSolicitudes").attachPatternMatched(this._onRouteMatched, this);
+        },
+        _onRouteMatched: function (oEvent) {
+            var oList = this.byId("requestList");
+            var oBinding = oList.getBinding("items");
+
+            // Elimina los filtros que se crearon al ingresar a alguna solicitud y volver
+            if (oBinding) {
+                oBinding.filter([]);
+            }
         },
         _updateTableCount: function () {
             var oTable = this.byId("requestsTable");
@@ -593,7 +338,7 @@ sap.ui.define([
             service.readDataERP("/cust_INETUM_SOL_C_0000", oModelApi)
                 .then(data => {
                     let oNewModelC0000 = new JSONModel(data.data.results)
-                    this.getView().setModel(oNewModelC0000, "cust_INETUM_SOL_C_0000");
+                    this.getOwnerComponent().setModel(oNewModelC0000, "cust_INETUM_SOL_C_0000");
                 })
                 .catch(error => {
                     console.error("Error: ", error.message);
@@ -605,8 +350,8 @@ sap.ui.define([
             let ii = 0;
             oModel.read("/cust_INETUM_SOL_DM_0001", {
                 urlParameters: {
-                    "$expand": "cust_steps",
-                    "$select": "effectiveStartDate,externalCode,cust_solicitante,cust_fechaSol,cust_deadLine,cust_steps,cust_indexStep,cust_maxStep,cust_status"
+                    "$expand": "cust_steps,cust_solFields",
+                    "$select": "cust_solFields,effectiveStartDate,externalCode,cust_solicitante,cust_fechaSol,cust_deadLine,cust_steps,cust_indexStep,cust_maxStep,cust_status,cust_object"
                 },
                 success: (oData, oResponse) => {
                     oData.results.forEach(element => {
@@ -632,8 +377,8 @@ sap.ui.define([
                         }
                         console.log(aDataModel);
                     });
-                    const oNewModelDm0001 = new JSONModel({ cust_INETUM_SOL_DM_0001: aDataModel })
-                    this.getView().setModel(oNewModelDm0001, "cust_INETUM_SOL_DM_0001");
+                    const oNewModelDm0001 = new JSONModel({ cust_INETUM_SOL_DM_0001: oData.results })
+                    this.getOwnerComponent().setModel(oNewModelDm0001, "cust_INETUM_SOL_DM_0001");
                 },
                 error: oError => {
                     console.log(oError)
@@ -641,6 +386,86 @@ sap.ui.define([
 
             });
             this._getRowsTable();
+        },
+        /**
+        * Carga, procesa y agrupa la lista de solicitudes desde la entidad C_0001.
+        * @private
+        * @returns {Promise}
+        */
+        _cargarListaDeSolicitudes: async function () {
+            const oModel = this.getOwnerComponent().getModel();
+
+            // Filtro para el llamado al back
+            const aFilters = [
+                new sap.ui.model.Filter("cust_status", sap.ui.model.FilterOperator.EQ, "A")
+            ];
+
+            const oParameters = {
+                bParam: true,
+                oParameter: {
+                    "$expand": "cust_idTipo2Nav"
+                }
+            };
+
+            // Se hace un llamado a la entidad de las solicitudes hijas 'C_0001', 
+            // con un parametro de expand a las solicitudes padres 'cust_idTipoNav' ('C_0002' a través de la navegación)
+            return service.readDataERP("/cust_INETUM_SOL_C_0001", oModel, aFilters, oParameters)
+                .then((oData) => {
+                    const finalData = this._procesarYAgruparResultados(oData.data.results);
+
+                    // Se pasa el array a un modelo json para pasarlo a la vista
+                    const oGroupedModel = new JSONModel({
+                        requests: finalData
+                    });
+                    this.getOwnerComponent().setModel(oGroupedModel, "groupedModel_0001");
+                });
+        },
+        /**
+         * Procesa y transforma los resultados del servicio para agruparlos por tipo.
+         * @param {Array} aResults - El array de datos crudos del servicio.
+         * @returns {Array} El array de datos procesados y agrupados.
+         * @private
+         */
+        _procesarYAgruparResultados: function (aResults) {
+            const sNombreTipoSolicitud = "cust_nombreTSol_defaultValue";
+            const sNombreSolicitud = "cust_nombreSol_defaultValue";
+
+            // Creamos un objeto vacío 'grouped' para asignarle los elementos de la entidad de forma correcta
+            // ya que el read inicial devuelve hijos con padres anidados, requerimos transformar a padres con hijos anidados.
+            const grouped = {};
+
+            aResults.forEach(item => {
+                // Se itera en los resultados de la entidad 0001, se le asigna a la variable 'tipo' el valor
+                // actual del nombre de la solicitud desde la entidad 0002 (obtenida por el expand),
+                // esto con el fin de buscar dentro de 'grouped' si ya hay un grupo con ese nombre.
+                const tipo = item.cust_idTipo2Nav?.[sNombreTipoSolicitud] || "Sin tipo definido";
+
+                // Se busca por ese nombre en el objeto 'grouped'. Si no se encuentra en el primer llamado,
+                // se asigna un array vacío. Ej: grouped['Solicitud de Vacaciones'] = [],
+                // para que los elementos que coincidan con ese nombre se puedan agregar.
+                if (!grouped[tipo]) {
+                    grouped[tipo] = [];
+                }
+
+                // Ahora que el array del grupo está inicializado, se le puede hacer push de los elementos del hijo (entidad 0001).
+                grouped[tipo].push({
+                    id: item.externalCode,
+                    nombre: item[sNombreSolicitud],
+                    fecha: item.effectiveStartDate,
+                    evento: item.cust_event,
+                    razonEvento: item.cust_eventReason,
+                    objeto: item.cust_object,
+                    tipoObjeto: item.cust_tipoObject,
+                    campos_C_0004: item.cust_solFields,
+                    WFNav_C_0003: item.cust_idWFNav
+                });
+            });
+
+            // Se transforma el objeto en un array para el binding de la vista.
+            return Object.keys(grouped).map(tipo => ({
+                type: tipo,
+                items: grouped[tipo]
+            }));
         }
     });
 });

@@ -116,6 +116,13 @@
           ]
         },
         {
+          "name": "RoutelistaSolicitudes",
+          "pattern": ":?query:",
+          "target": [
+            "TargetlistaSolicitudes"
+          ]
+        },
+        {
           "name": "RouteVisualizacionSolicitud",
           "pattern": "VisualizarSolicitud/{externalCode}/{effectiveStartDate}",
           "target": "TargetvisualizacionSolicitud"
@@ -124,7 +131,12 @@
       "targets": {
         "TargetMain": {
           "id": "Main",
-          "name": "Main"
+          "name": "Main",
+          "transition": "slide"
+        },
+        "TargetlistaSolicitudes": {
+          "id": "listaSolicitudes",
+          "name": "listaSolicitudes"
         },
         "TargetvisualizacionSolicitud": {
           "viewType": "XML",
