@@ -28,9 +28,9 @@ sap.ui.define([
                 emphasizedAction: sAccept,
 
             };
-            utils.showBI(true);
             let callFuntion = function (oAction) {
                 if (oAction === sAccept) {
+                    utils.showBI(true);
                     let cust_activeStep = '';
                     let oFechaActual = new Date();
                     let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
@@ -118,9 +118,9 @@ sap.ui.define([
                 emphasizedAction: sAccept,
 
             };
-            utils.showBI(true);
             let callFuntion = function (oAction) {
                 if (oAction === sAccept) {
+                    utils.showBI(true);
                     let cust_activeStep = false;
                     let oKeyDM0002;
                     let oKeyDM0001;
@@ -188,9 +188,9 @@ sap.ui.define([
                 emphasizedAction: sAccept,
 
             };
-            utils.showBI(true);
             let callFuntion = function (oAction) {
                 if (oAction === sAccept) {
+                    utils.showBI(true);
                     let cust_activeStep = '';
                     let oFechaActual = new Date();
                     let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
@@ -267,9 +267,9 @@ sap.ui.define([
                 emphasizedAction: sAccept,
 
             };
-            utils.showBI(true);
             let callFuntion = function (oAction) {
                 if (oAction === sAccept) {
+                    utils.showBI(true);
                     let cust_activeStep = '';
                     let oFechaActual = new Date();
                     let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;

@@ -25,6 +25,7 @@
                     enableCellFilter="{modeloLocal>/cellFilterOn}"
                     filter="filterGlobally"
                     width="auto"
+                    selectionMode="None"
                     busy="{busy>/tableBusy}" busyIndicatorDelay="0" busyIndicatorSize="Large"
                     >
                     <extension>

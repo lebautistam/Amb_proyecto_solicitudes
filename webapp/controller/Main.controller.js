@@ -12,122 +12,43 @@ sap.ui.define([
     "../model/formatter",
     "../service/service",
     "../utils/utils",
-    "../utils/Operaciones"
-], (Controller, Log, JSONModel, Filter, FilterOperator, DateFormat, ToolbarSpacer, jQuery, MessageBox, MessageToast, formatter, service, utils, Operaciones) => {
+    "../utils/Operaciones",
+    "../utils/Lenguaje",
+], (Controller, Log, JSONModel, Filter, FilterOperator, DateFormat, ToolbarSpacer, jQuery, MessageBox, MessageToast, formatter, service, utils, Operaciones, Lenguaje) => {
     "use strict";
 
     return Controller.extend("com.amb.ambpendiapro.controller.Main", {
         formatter: formatter,
-        onInit() {
-            var sLanguage = sap.ui.getCore().getConfiguration().getLanguage();
-            console.log(sLanguage);
-            this._loadUserInfo();
+        async onInit() {
+            // this._loadUserInfo();
             this._requestBusy();
-            this._cargarListaDeSolicitudes();
-            // this._getRowsTable();
             let oViewModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
             let oViewModelDM0001 = this.getView().getModel("cust_INETUM_SOL_DM_0001");
             if (!oViewModelC0000) {
-                this._getParametersApp();
+                await this._getParametersApp();
             }
             if (!oViewModelDM0001) {
-                this._getMainDataEntity();
+                await this._getMainDataEntity();
             }
 
-            let oModel2 = this.getOwnerComponent().getModel("modeloLocal");
-            let oModel = this.getOwnerComponent().getModel();
-            // const fechaDeseada = new Date('2025-07-16T11:52:03');
-            let fechaDeseada = new Date();
-            let fechaDeseada2 = new Date('2025-07-14T11:52:03');
-
-            // 2. Obtén los milisegundos ("ticks") desde la época Unix.
-            let ticks = fechaDeseada.getTime();
-            let ticks2 = fechaDeseada2.getTime();
-
-            // 3. Construye la cadena en el formato que OData V2 espera.
-            let fechaODataV2 = `/Date(${ticks})/`;
-            let fechaODataV22 = `/Date(${ticks2})/`;
-            let aRecords = oModel2.getProperty("/solicitudes");
-            let i = 11;
-            let j = 1;
-            // aRecords.forEach(function (oRecord) {
-            //   // fechaDeseada2 = new Date(fechaDeseada2);
-            //   var oPayload = {
-            //     cust_INETUM_SOL_DM_0001_effectiveStartDate: fechaODataV2,
-            //     cust_INETUM_SOL_DM_0001_externalCode: `${i}`,
-            //     cust_aprobUser: oRecord.cust_aprobUser,
-            // cust_activeStep: oRecord.cust_activeStep
-            // cust_deadLine: fechaODataV22,
-            // externalCode: `${i}`,
-            // effectiveStartDate: fechaODataV2,
-            // cust_fechaSol: fechaODataV2,
-            // cust_solicitante: "SFADMIN_LBM"
-            // };
-            // fechaDeseada2 = fechaDeseada2.setDate(fechaDeseada2.getDate() + j);
-            // console.log(fechaDeseada2)
-            // ticks2 = fechaDeseada.getTime(); 
-            // fechaODataV22 = `/Date(${ticks2})/`;
-            //   i ++;
-            //   j++;
-            //   // Crear una operación para cada registro
-            //   oModel.create("/cust_INETUM_SOL_DM_0002", oPayload, {
-            //         success: (oData, oResponse) => {
-            //           console.log(oData, oResponse)
-            //         },
-            //         error: oError => {
-            //           console.log(oError)
-            //         }
-            //   })
-            // });
-
-
-            // 4. Ahora crea tu payload con el formato correcto.
-            let oPayload = {
-                effectiveStartDate: fechaODataV2,
-                externalCode: '123456789'
-            };
-
-            // oModel.create("/cust_INETUM_SOL_C_0000", oPayload, {
+            const oFilterSimple = new Filter("PickListV2_id", FilterOperator.EQ, "INETUM_SOL_P_0008");
+            // oModel.read("/PickListValueV2", {
+            //     // urlParameters: {
+            //     //     "$expand": "cust_solFields/cust_fieldNav,cust_steps,cust_objectNav/parentPickListValueNav,cust_tipoObjectNav",
+            //     //     // "$filters": "key eq 'A'"
+            //     // },
+            //     urlParameters: {
+            //         "$expand": "parentPickListValueNav",
+            //         // "$filters": "key eq 'A'"
+            //     },
+            //     filters: [oFilterSimple],
             //     success: (oData, oResponse) => {
-            //       console.log(oData, oResponse)
+            //         console.log(oData, oResponse)
             //     },
             //     error: oError => {
-            //       console.log(oError)
-            //     }
-            //   })
-            // for (let index = 1; index < 11; index++) {
-
-            //   var oKey = oModel.createKey('/cust_INETUM_SOL_DM_0002', {
-            //     effectiveStartDate: '2025-07-16T11:52:03',
-            //     externalCode: `${index}`
-            //   });
-            //   oModel.remove(oKey, {
-            //       success: (oData, oResponse) => {
-            //         console.log(oData, oResponse)
-            //       },
-            //       error: oError => {
             //         console.log(oError)
-            //       }
-            //     })
-            // }
-            const oFilterSimple = new Filter("PickListV2_id", FilterOperator.EQ, "INETUM_SOL_P_0008");
-            oModel.read("/PickListValueV2", {
-                // urlParameters: {
-                //     "$expand": "cust_solFields/cust_fieldNav,cust_steps,cust_objectNav/parentPickListValueNav,cust_tipoObjectNav",
-                //     // "$filters": "key eq 'A'"
-                // },
-                urlParameters: {
-                    "$expand": "parentPickListValueNav",
-                    // "$filters": "key eq 'A'"
-                },
-                filters: [oFilterSimple],
-                success: (oData, oResponse) => {
-                    console.log(oData, oResponse)
-                },
-                error: oError => {
-                    console.log(oError)
-                }
-            })
+            //     }
+            // })
             // console.log(aRecords)
         },
         _loadUserInfo: function () {
@@ -260,8 +181,8 @@ sap.ui.define([
 
             if (sQuery) {
                 this._oGlobalFilter = new Filter([
-                    new Filter("cust_nombreSol_defaultValue", FilterOperator.Contains, sQuery),
-                    new Filter("cust_nombreTSol_defaultValue", FilterOperator.Contains, sQuery),
+                    new Filter("cust_nombreSol", FilterOperator.Contains, sQuery),
+                    new Filter("cust_nombreTSol", FilterOperator.Contains, sQuery),
                     new Filter("cust_solicitante", FilterOperator.Contains, sQuery)
                 ], false);
             }
@@ -294,24 +215,6 @@ sap.ui.define([
             } else {
                 oLocalModel.setProperty("/tableBusy", false); // Asegura que esté en false al inicio
             }
-
-            if (!oModelScf) {
-                console.error("Error: El modelo OData no está disponible en onInit.");
-                // Puedes lanzar una excepción o manejar este caso de alguna manera.
-                return; // Detener la ejecución si el modelo no está listo
-            }
-            oModelScf.attachRequestSent(function () {
-                this.getView().getModel("busy").setProperty("/tableBusy", true);
-            }, this);
-
-            oModelScf.attachRequestCompleted(function () {
-                this.getView().getModel("busy").setProperty("/tableBusy", false);
-                this._updateTableCount
-            }, this);
-
-            oModelScf.attachRequestFailed(function () {
-                this.getView().getModel("busy").setProperty("/tableBusy", false);
-            }, this);
         },
         _getRowsTable: function () {
             let oViewModel = this.getView().getModel("view");
@@ -333,59 +236,81 @@ sap.ui.define([
                 }
             }, this);
         },
-        _getParametersApp: function () {
+        _getParametersApp: async function () {
             let oModelApi = this.getOwnerComponent().getModel();
-            service.readDataERP("/cust_INETUM_SOL_C_0000", oModelApi)
-                .then(data => {
-                    let oNewModelC0000 = new JSONModel(data.data.results)
-                    this.getOwnerComponent().setModel(oNewModelC0000, "cust_INETUM_SOL_C_0000");
-                })
-                .catch(error => {
-                    console.error("Error: ", error.message);
-                });
+            const oModelC0001 = await service.readDataERP("/cust_INETUM_SOL_C_0000", oModelApi)
+            let oNewModelC0000 = new JSONModel(oModelC0001.data.results)
+            this.getOwnerComponent().setModel(oNewModelC0000, "cust_INETUM_SOL_C_0000");
         },
-        _getMainDataEntity: function () {
+        _getMainDataEntity: async function () {
             let oModel = this.getOwnerComponent().getModel();
-            let aDataModel = [];
-            let ii = 0;
-            oModel.read("/cust_INETUM_SOL_DM_0001", {
-                urlParameters: {
+            let oViewModelC0000 = this.getOwnerComponent().getModel("cust_INETUM_SOL_C_0000");
+            const oParameters = {
+                bParam: true,
+                oParameter: {
                     "$expand": "cust_steps,cust_solFields",
                     "$select": "cust_solFields,effectiveStartDate,externalCode,cust_solicitante,cust_fechaSol,cust_deadLine,cust_steps,cust_indexStep,cust_maxStep,cust_status,cust_object"
-                },
-                success: (oData, oResponse) => {
-                    oData.results.forEach(element => {
-                        if (element.cust_steps.results.length > 0) {
-
-                            let filter = element.cust_steps.results.filter(step => step.cust_aprobUser == "SFADMIN_LBM" && step.cust_activeStep == false);
-                            if (filter.length) {
-                                let oKey = oModel.createKey('/cust_INETUM_SOL_C_0000', {
-                                    effectiveStartDate: '2025-07-15T19:00:00',
-                                    externalCode: '123456789'
-                                });
-                                service.readDataERP(oKey, oModel)
-                                    .then(data => {
-                                        element.cust_vto = data.data.cust_vto_defaultValue;
-                                    })
-                                    .catch(error => {
-                                        console.error("Error: ", error.message);
-                                    });
-                                aDataModel.push(element);
-                                filter = [];
-                                ii++;
-                            }
-                        }
-                        console.log(aDataModel);
-                    });
-                    const oNewModelDm0001 = new JSONModel({ cust_INETUM_SOL_DM_0001: oData.results })
-                    this.getOwnerComponent().setModel(oNewModelDm0001, "cust_INETUM_SOL_DM_0001");
-                },
-                error: oError => {
-                    console.log(oError)
                 }
-
+            };
+            this.getView().getModel("busy").setProperty("/tableBusy", true);
+            try {
+                const oData = await service.readDataERP("/cust_INETUM_SOL_DM_0001", oModel, [], oParameters);
+                const aEnrichmentPromises = oData.data.results.map(async (element) => {
+                    try {
+                        // Esperamos a que la llamada anidada termine PARA CADA elemento
+                        const oNameData = await this._getNameTypeRequest(oModel, element);
+                        // Modificamos el elemento con los datos obtenidos
+                        element.cust_nombreSolicitud = oNameData?.cust_nombreSol_defaultValue;
+                        element.cust_nombreTSolicitud = oNameData?.cust_idTipo2Nav?.cust_nombreTSol_defaultValue;
+                        
+                        return element;
+                    } catch (oError) {
+                        console.error(oError);
+                    }
+                });
+                const aEnrichedData = await Promise.all(aEnrichmentPromises);
+            
+                const aFiltered = aEnrichedData.filter(element => {
+                    return element.cust_steps.results.some(step => step.cust_aprobUser == "SFADMIN_LBM" && step.cust_activeStep === false);
+                }).map(element => {
+                    const sCustVto = Lenguaje.obtenerNombreConcatenado("cust_vto");
+                    element.cust_vto = oViewModelC0000.oData[0][sCustVto];
+                    return element;
+                });
+        
+                // console.log("Datos finales filtrados y mapeados:", aFiltered);
+                
+                const oNewModelDm0001 = new JSONModel({ cust_INETUM_SOL_DM_0001: aEnrichedData });
+                this.getOwnerComponent().setModel(oNewModelDm0001, "cust_INETUM_SOL_DM_0001");
+        
+            } catch (oError) {
+                console.error("Error al cargar los datos principales:", oError);
+                MessageToast.show("Error al cargar los datos");
+            } finally {
+                this.getView().getModel("busy").setProperty("/tableBusy", false);
+                this._getRowsTable();
+            }
+        },
+        _getNameTypeRequest: async function (oModel, oData) {
+            let oKeyC0001 = oModel.createKey('/cust_INETUM_SOL_C_0001', {
+                cust_object: oData.cust_object
             });
-            this._getRowsTable();
+            const aFilter = [
+                new Filter("cust_object", FilterOperator.EQ, oData.cust_object)
+            ];
+            const oParameters = {
+                bParam: true,
+                oParameter: {
+                    "$expand": "cust_idTipo2Nav",
+                    "$select": "cust_idTipo2Nav,cust_nombreSol_ca_ES,cust_nombreSol_defaultValue,cust_nombreSol_en_DEBUG,cust_nombreSol_en_US,cust_nombreSol_es_ES,cust_nombreSol_localized"
+                }
+            };
+            try {
+                const oDataC0001 = await service.readDataERP("/cust_INETUM_SOL_C_0001", oModel, aFilter, oParameters)
+                return oDataC0001.data.results[0]
+            } catch (error) {
+                console.log(error)
+            }
         },
         /**
         * Carga, procesa y agrupa la lista de solicitudes desde la entidad C_0001.
@@ -429,9 +354,6 @@ sap.ui.define([
         _procesarYAgruparResultados: function (aResults) {
             const sNombreTipoSolicitud = "cust_nombreTSol_defaultValue";
             const sNombreSolicitud = "cust_nombreSol_defaultValue";
-
-            // Creamos un objeto vacío 'grouped' para asignarle los elementos de la entidad de forma correcta
-            // ya que el read inicial devuelve hijos con padres anidados, requerimos transformar a padres con hijos anidados.
             const grouped = {};
 
             aResults.forEach(item => {

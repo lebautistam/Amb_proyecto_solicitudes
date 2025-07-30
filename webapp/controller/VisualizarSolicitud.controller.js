@@ -62,21 +62,23 @@ sap.ui.define([
             const oRequestDetail = this._buscarSolicitudEnModeloDM(sExternalCode, sEffectiveDate);
             if (oRequestDetail) {
                 this._prepararModeloFiltrado(oRequestDetail);
-                const oRequestHead = this._buscarSolicitudEnModeloC(oRequestDetail.cust_object);
-                if (!oRequestHead) {
-                    console.warn("No se encontró la solicitud con ID:", sSolicitudID);
-                    return;
-                }
+                // const oRequestHead = this._buscarSolicitudEnModeloC(oRequestDetail.cust_object);
+                // if (!oRequestHead) {
+                //     console.warn("No se encontró la solicitud con ID:", sSolicitudID);
+                //     return;
+                // }
             }
 
-
-
             const aCampos = oRequestDetail.cust_solFields.results;
+            
             console.log(aCampos)
             creadorFormulario.generarFormulario(this, "FormularioDinamico_visualizacion", aCampos);
         },
         _buscarSolicitudEnModeloDM: function (sExternalCode, sEffectiveDate) {
-            const oGrupoModelos = this.getView().getModel("cust_INETUM_SOL_DM_0001");
+            const oGrupoModelos = this.getOwnerComponent().getModel("cust_INETUM_SOL_DM_0001");
+            if(!oGrupoModelos){
+                this.onNavBack();
+            }
             const oSolicitudes = oGrupoModelos.getProperty("/cust_INETUM_SOL_DM_0001");
 
             const timestampAsNumber = parseInt(sEffectiveDate); // Opción 1: parseInt (recomendado por claridad y seguridad)

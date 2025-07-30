@@ -9,10 +9,50 @@ sap.ui.define([
     "sap/m/UploadCollection",
     "sap/m/MessageToast",
     "sap/m/library",
-    "../utils/Lenguaje"
-], function (FormElement, Label, Input, DatePicker, TextArea, Select, Item, UploadCollection, MessageToast, ListMode, Lenguaje) {
+    "../utils/Lenguaje",
+    "../service/service",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
+], function (FormElement, Label, Input, DatePicker, TextArea, Select, Item, UploadCollection, MessageToast, ListMode, Lenguaje, service, Filter, FilterOperator) {
     "use strict";
+    function _viewAttachment(attachment, oController) {
+        const oItem = new sap.m.UploadCollectionItem({
+            fileName: attachment.fileName,
+            mimeType: attachment.mimeType,
+            // La URL es la que permite la descarga. La creamos a partir del Base64.
+            url: _crearDataURI(attachment.mimeType, attachment.fileContent),
+            // Para que el navegador inicie la descarga al hacer clic
+            attributes: [
+                new sap.m.ObjectAttribute({
+                    title: "Descargar",
+                    text: attachment.fileName,
+                    active: true
+                })
+            ],
+            // Deshabilitamos los botones de editar y eliminar por item
+            enableEdit: false,
+            enableDelete: false,
+            visibleEdit: false,
+            visibleDelete: false
+        });
+        oItem.attachPress(function (oEvent) {
+            // console.log(this.getUrl())
+            // sap.m.URLHelper.redirect(this.getUrl(), true);
+            oEvent.preventDefault();
 
+            const sDataURI = this.getUrl(); // Obtiene la Data URI del item
+            const sFileName = this.getFileName(); // Obtiene el nombre de archivo del item
+            // Crear un elemento <a> temporal en el DOM
+            const a = document.createElement('a');
+            a.href = sDataURI;
+            a.download = sFileName; // Esto le dice al navegador que lo descargue con este nombre
+            document.body.appendChild(a); // Añadirlo al DOM (necesario para Firefox)
+            a.click(); // Simular un clic
+            document.body.removeChild(a);
+        });
+
+        return oItem;
+    }
     /**
      * aCampos: array de objetos del nuevo modelo
      * {
@@ -26,6 +66,7 @@ sap.ui.define([
     function generarFormulario(oController, sContainerId, aCampos) {
         const oView = oController.getView();
         const oFormContainer = oView.byId(sContainerId);
+        const oModel = oController.getOwnerComponent().getModel();
         if (!oFormContainer) return;
         oFormContainer.destroyFormElements();
 
@@ -91,7 +132,7 @@ sap.ui.define([
 
 
                 case "Attachment":
-                    oControl = new sap.m.UploadCollection({
+                    oControl = new UploadCollection({
                         mode: sap.m.ListMode.SingleSelectMaster,
                         multiple: false,
                         uploadEnabled: false,      // Deshabilita el botón de carga
@@ -112,6 +153,21 @@ sap.ui.define([
                 oControl.setEditable(false);
             } else {
                 oControl.setUploadEnabled(false);
+                const aFilter = [
+                    new Filter("attachmentId", FilterOperator.EQ, campo.cust_value)
+                ];
+                service.readDataERP("/Attachment", oModel, aFilter)
+                    .then(data => {
+                        if (data.data.results.length) {
+                            const oItem = this._viewAttachment(data.data.results[0], oController);
+                            oControl.addItem(oItem);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error: ", error.message);
+                    });
+                // const oAttachment = Promise.all(oResult);
+                // console.log(oAttachment)
             }
 
             // if (typeof oControl.setRequired === "function") {
@@ -121,6 +177,10 @@ sap.ui.define([
             oFormElement.addField(oControl);
             oFormContainer.addFormElement(oFormElement);
         });
+    }
+
+    function _crearDataURI(sMimeType, sBase64Content) {
+        return `data:${sMimeType};base64,${sBase64Content}`;
     }
 
     function obtenerDatosFormulario(oView, sContainerId, aCampos) {
@@ -215,7 +275,9 @@ sap.ui.define([
     return {
         generarFormulario: generarFormulario,
         obtenerDatosFormulario: obtenerDatosFormulario,
-        validarFormulario: validarFormulario
+        validarFormulario: validarFormulario,
+        _viewAttachment: _viewAttachment,
+        _crearDataURI: _crearDataURI
     };
 
 
