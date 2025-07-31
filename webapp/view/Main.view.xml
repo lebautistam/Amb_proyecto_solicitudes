@@ -3,16 +3,16 @@
     xmlns="sap.ui.table"
     xmlns:m="sap.m"
     xmlns:core="sap.ui.core">
-    <m:Page id="page" title="{i18n>title}">
+    <m:Page id="page" title="{modelTitle>/title}">
         <m:customHeader>
-            <m:Toolbar>
-                <core:Icon src="sap-icon://pending" size="1.5rem" class="sapUiNoMarginEnd sapUiMediumMarginBegin"/>
-                <m:Title text="Pendientes de aprobar" level="H2"/>
+            <m:Toolbar id="_IDGenToolbar3">
+                <core:Icon id="_IDGenIcon1" src="sap-icon://pending" size="1.5rem" class="sapUiNoMarginEnd sapUiMediumMarginBegin"/>
+                <m:Title id="_IDGenTitle1" text="{modelTitle>/title}" level="H2"/>
 
             </m:Toolbar>
         </m:customHeader>
         <m:content>
-            <m:Panel height="auto">
+            <m:Panel id="_IDGenPanel" height="auto">
                 <Table
                     id="requestsTable"
                     rows="{
@@ -26,56 +26,85 @@
                     filter="filterGlobally"
                     width="auto"
                     selectionMode="None"
-                    busy="{busy>/tableBusy}" busyIndicatorDelay="0" busyIndicatorSize="Large"
+                    busy="{busy>/tableBusy}" busyIndicatorDelay="0" busyIndicatorSize="Medium"
                     >
                     <extension>
-                        <m:OverflowToolbar style="Clear">
-                            <m:SearchField
+                        <m:OverflowToolbar id="_IDGenOverflowToolbar1" style="Clear">
+                            <m:SearchField id="_IDGenSearchField"
                                 placeholder="Filter"
                                 value="{modeloLocal>/globalFilter}"
                                 search="filterGlobally"
                                 width="15rem"/>
-                            <m:Button
+                            <m:Button id="_IDGenButton5"
                                 icon="sap-icon://decline"
                                 tooltip="Clear all sortings"
                                 press="clearAllSortingsFilters"/>
-                            <m:ToolbarSpacer/>
+                            <m:ToolbarSpacer id="_IDGenToolbarSpacer1"/>
                             <m:Title id="counterTitle" text="{= ${view>/filteredCount} + ' ' + (${view>/filteredCount} > 1 ? 'solicitudes' : 'solicitud') }" titleStyle="H5"/>
                         </m:OverflowToolbar>
                     </extension>
 
                     <columns>
-                        <Column id="colSolicitud" width="25%" filterProperty="cust_INETUM_SOL_DM_0001>cust_nombreSol_defaultValue" sortProperty="cust_nombreSol_defaultValue">
-                            <m:Label text="Solicitud" />
+                        <Column id="colSolicitud" 
+                                width="25%" 
+                                filterProperty="cust_nombreSolicitud" 
+                                sortProperty="cust_nombreSolicitud"
+                                autoResizable="true"
+                                >
+                            <m:Label id="_IDGenLabel" text="{i18n>request}" />
                             <template>
-                                <m:Text text="{cust_INETUM_SOL_DM_0001>cust_nombreSol_defaultValue}" wrapping="false" />
+                                <m:Text id="_IDGenText" text="{cust_INETUM_SOL_DM_0001>cust_nombreSolicitud}" wrapping="false" />
                             </template>
                         </Column>
-                        <Column id="colTipo" hAlign="Center" width="15%" filterProperty="cust_INETUM_SOL_DM_0001>cust_nombreTSol_defaultValue" sortProperty="cust_INETUM_SOL_DM_0001>cust_nombreTSol_defaultValue" >
-                            <m:Label text="Tipo" />
+                        <Column id="colTipo" 
+                                hAlign="Center" 
+                                width="15%" 
+                                filterProperty="cust_nombreTSolicitud" 
+                                sortProperty="cust_nombreTSolicitud" 
+                                autoResizable="true"
+                                >
+                            <m:Label id="_IDGenLabel1" text="{i18n>type}" />
                             <template>
-                                <m:Text text="{cust_INETUM_SOL_DM_0001>cust_nombreTSol_defaultValue}" wrapping="false" />
+                                <m:Text id="_IDGenText1" text="{cust_INETUM_SOL_DM_0001>cust_nombreTSolicitud}" wrapping="false" />
                             </template>
                         </Column> 
-                        <Column id="colSolicitante" hAlign="Center" width="25%" filterProperty="cust_INETUM_SOL_DM_0001>cust_solicitante" sortProperty="cust_INETUM_SOL_DM_0001>cust_solicitante">
-                            <m:Label text="Solicitante" />
+                        <Column id="colSolicitante" 
+                                hAlign="Center" 
+                                width="25%" 
+                                filterProperty="cust_solicitante" 
+                                sortProperty="cust_solicitante"
+                                autoResizable="true"
+                                >
+                            <m:Label id="_IDGenLabel2" text="{i18n>applicant}" />
                             <template>
-                                <m:Text text="{cust_INETUM_SOL_DM_0001>cust_solicitante}" wrapping="false" />
+                                <m:Text id="_IDGenText2" text="{cust_INETUM_SOL_DM_0001>cust_solicitante}" wrapping="false" />
                             </template>
                         </Column>
-                        <Column id="colFecha" hAlign="Center" width="15%" sortOrder="None" filterProperty="cust_INETUM_SOL_DM_0001>cus_fechaSol" sortProperty="cust_INETUM_SOL_DM_0001>cus_fechaSol">
-                            <m:Label text="F. Solicitud" />
+                        <Column id="colFecha" 
+                                hAlign="Center" 
+                                width="15%"  
+                                filterProperty="cust_fechaSol" 
+						        filterType="sap.ui.model.odata.type.String"
+                                filtered="false"
+                                sortProperty="cust_fechaSol"
+                                autoResizable="true"
+                                >
+                            <m:Label id="_IDGenLabel3" text="{i18n>application_date}" />
                             <template>
-                                <m:Text text="{
+                                <m:Text id="_IDGenText3" text="{
                                         path: 'cust_INETUM_SOL_DM_0001>cust_fechaSol',
-                                        type: 'sap.ui.model.odata.type.DateTime',
+                                        type: 'sap.ui.model.odata.type.Date',
                                         formatOptions: { style: 'long', pattern: 'dd/MM/yyyy' }}" wrapping="false" />
                             </template>
                         </Column>
-                        <Column id="colVencimiento" hAlign="Center" width="15%">
-                            <m:Label text="Vencimiento" />
+                        <Column id="colVencimiento" 
+                                hAlign="Center" 
+                                width="15%"
+                                autoResizable="true"
+                                >
+                            <m:Label id="_IDGenLabel4" text="{i18n>expiration}" />
                             <template>
-                                <m:ObjectStatus text="{
+                                <m:ObjectStatus id="_IDGenObjectStatus" text="{
                                                     parts: [
                                                         {path: 'cust_INETUM_SOL_DM_0001>cust_deadLine'}, {path: 'cust_INETUM_SOL_DM_0001>cust_vto'}
                                                     ],
@@ -90,17 +119,21 @@
                                 />
                             </template>
                         </Column>
-                        <Column id="colAcciones" hAlign="Center" width="30%">
-                            <m:Label text="Acciones" />
+                        <Column id="colAcciones" 
+                                hAlign="Center" 
+                                width="30%"
+                                autoResizable="true"
+                                >
+                            <m:Label id="_IDGenLabel5" text="{i18n>actions}" />
                             <template>
-                                <m:OverflowToolbar style="Clear" class="sapUiNoMarginEnd">
-                                    <m:Button                                    
+                                <m:OverflowToolbar id="_IDGenOverflowToolbar2" style="Clear" class="sapUiNoMarginEnd">
+                                    <m:Button id="_IDGenButton6"                                    
                                         icon="sap-icon://accept"
                                         type="Success"
                                         tooltip="Aprobar"
                                         press=".onApprove"
                                         class="sapUiNoMarginEnd sap-icon-color-positive"  />
-                                    <m:Button
+                                    <m:Button id="_IDGenButton7"
                                         icon="sap-icon://decline"
                                         type="Reject"
                                         tooltip="Rechazar"
@@ -111,18 +144,18 @@
                                                     formatter: '.formatter.inCourse'
                                                  }"
                                         />
-                                    <m:Button
+                                    <m:Button id="_IDGenButton8"
                                         icon="sap-icon://arrow-left"
                                         type="Neutral"
                                         tooltip="Retroceder"
                                         press=".onReturn"
                                         class="sapUiNoMarginEnd sap-icon-color-negative" />
-                                    <m:Button
+                                    <m:Button id="_IDGenButton9"
                                         icon="sap-icon://display"
                                         type="Transparent"
                                         tooltip="Ver Detalle"
                                         press=".onDetailRequest" />
-                                    <m:Button
+                                    <m:Button id="_IDGenButton10"
                                         icon="sap-icon://undo"
                                         type="Attention"
                                         tooltip="Devolver"

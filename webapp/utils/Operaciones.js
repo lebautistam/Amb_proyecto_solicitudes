@@ -10,8 +10,9 @@ sap.ui.define([
     "sap/m/MessageToast",
     "../model/formatter",
     "../service/service",
-    "../utils/utils"
-], (Log, JSONModel, Filter, FilterOperator, DateFormat, ToolbarSpacer, jQuery, MessageBox, MessageToast, formatter, service, utils, Operaciones) => {
+    "./Lenguaje",
+    "./utils"
+], (Log, JSONModel, Filter, FilterOperator, DateFormat, ToolbarSpacer, jQuery, MessageBox, MessageToast, formatter, service, Lenguaje, utils) => {
     "use strict";
 
     return {
@@ -21,8 +22,10 @@ sap.ui.define([
             let oModelC0000 = oView.getView().getModel("cust_INETUM_SOL_C_0000");
             let oMensajes = oModel.getProperty("/mensajes");
             let sMessage = oMensajes.I2.I2;
-            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
-            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
+            const sAceptar = Lenguaje.obtenerNombreConcatenado("cust_aceptar");
+            const sCancelar = Lenguaje.obtenerNombreConcatenado("cust_cancelar");
+            let sAccept = oModelC0000.oData[0][sAceptar] || "Aceptar";
+            let sCancel = oModelC0000.oData[0][sCancelar] || "Cancelar";
             let oProperties = {
                 actions: [sAccept, sCancel],
                 emphasizedAction: sAccept,
@@ -30,7 +33,9 @@ sap.ui.define([
             };
             let callFuntion = function (oAction) {
                 if (oAction === sAccept) {
-                    utils.showBI(true);
+                    if (form) {
+                        utils.showBI(true);
+                    }
                     let cust_activeStep = '';
                     let oFechaActual = new Date();
                     let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
@@ -111,8 +116,10 @@ sap.ui.define([
             let oModelC0000 = oView.getView().getModel("cust_INETUM_SOL_C_0000");
             let oMensajes = oModel.getProperty("/mensajes");
             let sMessage = oMensajes.I3.I3;
-            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
-            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
+            const sAceptar = Lenguaje.obtenerNombreConcatenado("cust_aceptar");
+            const sCancelar = Lenguaje.obtenerNombreConcatenado("cust_cancelar");
+            let sAccept = oModelC0000.oData[0][sAceptar] || "Aceptar";
+            let sCancel = oModelC0000.oData[0][sCancelar] || "Cancelar";
             let oProperties = {
                 actions: [sAccept, sCancel],
                 emphasizedAction: sAccept,
@@ -120,7 +127,9 @@ sap.ui.define([
             };
             let callFuntion = function (oAction) {
                 if (oAction === sAccept) {
-                    utils.showBI(true);
+                    if (form) {
+                        utils.showBI(true);
+                    }
                     let cust_activeStep = false;
                     let oKeyDM0002;
                     let oKeyDM0001;
@@ -181,8 +190,10 @@ sap.ui.define([
             let oModelC0000 = oView.getView().getModel("cust_INETUM_SOL_C_0000");
             let oMensajes = oModel.getProperty("/mensajes");
             let sMessage = oMensajes.I4.I4;
-            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
-            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
+            const sAceptar = Lenguaje.obtenerNombreConcatenado("cust_aceptar");
+            const sCancelar = Lenguaje.obtenerNombreConcatenado("cust_cancelar");
+            let sAccept = oModelC0000.oData[0][sAceptar] || "Aceptar";
+            let sCancel = oModelC0000.oData[0][sCancelar] || "Cancelar";
             let oProperties = {
                 actions: [sAccept, sCancel],
                 emphasizedAction: sAccept,
@@ -190,7 +201,9 @@ sap.ui.define([
             };
             let callFuntion = function (oAction) {
                 if (oAction === sAccept) {
-                    utils.showBI(true);
+                    if (form) {
+                        utils.showBI(true);
+                    }
                     let cust_activeStep = '';
                     let oFechaActual = new Date();
                     let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
@@ -257,11 +270,13 @@ sap.ui.define([
         actionBack: function (oContext, oView, form = false) {
             let oModel = oView.getOwnerComponent().getModel("modeloLocal");
             let oModelApi = oView.getView().getModel();
-            let oModelC0000 = oView.getOwnerComponent().getModel("cust_INETUM_SOL_C_0000");
+            let oModelC0000 = oView.getView().getModel("cust_INETUM_SOL_C_0000");
             let oMensajes = oModel.getProperty("/mensajes");
             let sMessage = oMensajes.I5.I5;
-            let sAccept = oModelC0000.oData.cust_aceptar_defaultValue;
-            let sCancel = oModelC0000.oData.cust_cancelar_defaultValue;
+            const sAceptar = Lenguaje.obtenerNombreConcatenado("cust_aceptar");
+            const sCancelar = Lenguaje.obtenerNombreConcatenado("cust_cancelar");
+            let sAccept = oModelC0000.oData[0][sAceptar] || "Aceptar";
+            let sCancel = oModelC0000.oData[0][sCancelar] || "Cancelar";
             let oProperties = {
                 actions: [sAccept, sCancel],
                 emphasizedAction: sAccept,
@@ -269,7 +284,9 @@ sap.ui.define([
             };
             let callFuntion = function (oAction) {
                 if (oAction === sAccept) {
-                    utils.showBI(true);
+                    if (form) {
+                        utils.showBI(true);
+                    }
                     let cust_activeStep = '';
                     let oFechaActual = new Date();
                     let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;

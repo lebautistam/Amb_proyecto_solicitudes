@@ -71,7 +71,6 @@ sap.ui.define([
 
             const aCampos = oRequestDetail.cust_solFields.results;
             
-            console.log(aCampos)
             creadorFormulario.generarFormulario(this, "FormularioDinamico_visualizacion", aCampos);
         },
         _buscarSolicitudEnModeloDM: function (sExternalCode, sEffectiveDate) {

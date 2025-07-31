@@ -69,8 +69,7 @@ sap.ui.define([
         const oModel = oController.getOwnerComponent().getModel();
         if (!oFormContainer) return;
         oFormContainer.destroyFormElements();
-
-        aCampos.forEach(campo => {
+        aCampos.forEach(async (campo) => {
 
             const sLenguaje = Lenguaje.obtenerNombreConcatenado("cust_etiquetaInput");
             const sLabel = sLenguaje;
@@ -86,6 +85,15 @@ sap.ui.define([
                 case "A": sTipoControl = "Attachment"; break;
                 default: sTipoControl = "Input";
             }
+            //Consultamos el valor de los campos Select
+            if(sTipoControl === "Select"){
+                const aFilter = [
+                    new Filter("optionId", FilterOperator.EQ, campo.cust_value)
+                ];
+                const oCustLabel = await service.readDataERP("/PicklistLabel", oModel, aFilter);
+                campo.cust_valueSelect = oCustLabel?.data?.results[0]?.label
+
+            }
 
             const oFormElement = new FormElement({
                 label: new Label({ text: sLabel })
@@ -96,16 +104,10 @@ sap.ui.define([
             switch (sTipoControl) {
 
                 case "Select":
-                    oControl = new Select({
-                        selectedKey: campo.cust_value
+                    //Se deja de tipo input ya que será de solo de lectura
+                    oControl = new Input({
+                        value: campo.cust_valueSelect,
                     });
-                    // Temporal mientras llenan datos en api
-                    // (campo.options || []).forEach(opt => {
-                    //     oControl.addItem(new Item({
-                    //         key: opt.key,
-                    //         text: opt.text
-                    //     }));
-                    // });
                     break;
 
                 case "DatePicker":

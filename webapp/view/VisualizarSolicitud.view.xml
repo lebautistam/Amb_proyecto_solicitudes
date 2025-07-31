@@ -2,15 +2,24 @@
     controllerName="com.amb.ambpendiapro.controller.VisualizarSolicitud"
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
-    xmlns:f="sap.ui.layout.form">
+    xmlns:f="sap.ui.layout.form"
+    xmlns:core="sap.ui.core">
 
-    <Page id="pageVisualizar" title="{i18n>title}">
+    <Page id="pageVisualizar" title="{modelTitle>/title}">
+        <customHeader>
+            <Toolbar id="_IDGenToolbar2">
+                <core:Icon id="_IDGenIcon" src="sap-icon://pending" size="1.5rem" class="sapUiNoMarginEnd"/>
+                <Title id="_IDGenTitle" text="{modelTitle>/title}" level="H2" class="sapUiTinyMarginBegin"/>
+            </Toolbar>
+        </customHeader>
         <ScrollContainer id="scroll" height="100%" vertical="true">
             <VBox id="formContainer" class="sapUiSmallMargin">
                 <f:Form id="FormToolbar" editable="true" ariaLabelledBy="Title1">
                     <f:toolbar>
                         <Toolbar id="_IDGenToolbar1">
-                            <Title id="Title1" text="Solicitud" />
+                            <Title id="Title1" 
+                                   text="{filteredModelDM_0001>/request/cust_nombreSolicitud}" 
+                                   class="sapUiTinyMarginBegin"/>
                             <ToolbarSpacer id="_IDGenToolbarSpacer" />
                         </Toolbar>
                     </f:toolbar>
@@ -39,15 +48,34 @@
         </ScrollContainer>
 
         <footer>
-            <Bar id="_IDGenBar">
-                <contentRight>
-                    <Button id="_IDGenButton" text="Devolver" type="Emphasized" press="onBack" />
-                    <Button id="_IDGenButton1" text="Aprobar" type="Emphasized" press="onApprove" />
-                    <Button id="_IDGenButton2" text="Rechazar" type="Emphasized" press="onReject" />
-                    <Button id="_IDGenButton3" text="Retroceder" type="Emphasized" press="onReturn" />
-                    <Button id="_IDGenButton4" text="Cancelar" press="onCancel" />
-                </contentRight>
-            </Bar>
+            <OverflowToolbar id="_IDGenOverflowToolbar">
+                <ToolbarSpacer id="_IDGenToolbarSpacer2" />
+                <Button id="_IDGenButton" class="sapUiNoMarginEnd sapUiResponsivePadding" text="Devolver" type="Ghost" press="onBack" >
+                    <layoutData>
+                        <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData" priority="Low"/>
+                    </layoutData>
+                </Button>
+                <Button id="_IDGenButton1" class="sapUiNoMarginEnd sapUiResponsivePadding" text="Aprobar" type="Ghost" press="onApprove" >
+                    <layoutData>
+                        <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData1" priority="High"/>
+                    </layoutData>
+                </Button>
+                <Button id="_IDGenButton2" class="sapUiNoMarginEnd sapUiResponsivePadding" text="Rechazar" type="Ghost" press="onReject" >
+                    <layoutData>
+                        <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData2" priority="High"/>
+                    </layoutData>
+                </Button>
+                <Button id="_IDGenButton3" class="sapUiNoMarginEnd sapUiResponsivePadding" text="Retroceder" type="Ghost" press="onReturn" >
+                    <layoutData>
+                        <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData3" priority="Low"/>
+                    </layoutData>
+                </Button>
+                <Button id="_IDGenButton4" class="sapUiResponsiveContentPadding sapUiNoMarginEnd" text="Cancelar" press="onCancel" >
+                    <layoutData>
+                        <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData4" priority="High"/>
+                    </layoutData>
+                </Button>
+            </OverflowToolbar>
         </footer>
     </Page>
 

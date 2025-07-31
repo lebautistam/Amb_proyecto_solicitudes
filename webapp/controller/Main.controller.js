@@ -22,34 +22,9 @@ sap.ui.define([
         async onInit() {
             // this._loadUserInfo();
             this._requestBusy();
-            let oViewModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
-            let oViewModelDM0001 = this.getView().getModel("cust_INETUM_SOL_DM_0001");
-            if (!oViewModelC0000) {
-                await this._getParametersApp();
-            }
-            if (!oViewModelDM0001) {
-                await this._getMainDataEntity();
-            }
-
-            const oFilterSimple = new Filter("PickListV2_id", FilterOperator.EQ, "INETUM_SOL_P_0008");
-            // oModel.read("/PickListValueV2", {
-            //     // urlParameters: {
-            //     //     "$expand": "cust_solFields/cust_fieldNav,cust_steps,cust_objectNav/parentPickListValueNav,cust_tipoObjectNav",
-            //     //     // "$filters": "key eq 'A'"
-            //     // },
-            //     urlParameters: {
-            //         "$expand": "parentPickListValueNav",
-            //         // "$filters": "key eq 'A'"
-            //     },
-            //     filters: [oFilterSimple],
-            //     success: (oData, oResponse) => {
-            //         console.log(oData, oResponse)
-            //     },
-            //     error: oError => {
-            //         console.log(oError)
-            //     }
-            // })
-            // console.log(aRecords)
+            await this._getParametersApp();
+            await this._getMainDataEntity();
+            this._getRowsTable();
         },
         _loadUserInfo: function () {
             // Comprueba si el servicio UserInfo está disponible
@@ -158,7 +133,6 @@ sap.ui.define([
             oUiModel.setProperty("/availabilityFilterOn", false);
 
             this._oGlobalFilter = null;
-            this._oPriceFilter = null;
             this._filter();
 
             var aColumns = oTable.getColumns();
@@ -181,8 +155,8 @@ sap.ui.define([
 
             if (sQuery) {
                 this._oGlobalFilter = new Filter([
-                    new Filter("cust_nombreSol", FilterOperator.Contains, sQuery),
-                    new Filter("cust_nombreTSol", FilterOperator.Contains, sQuery),
+                    new Filter("cust_nombreSolicitud", FilterOperator.Contains, sQuery),
+                    new Filter("cust_nombreTSolicitud", FilterOperator.Contains, sQuery),
                     new Filter("cust_solicitante", FilterOperator.Contains, sQuery)
                 ], false);
             }
@@ -192,14 +166,11 @@ sap.ui.define([
         },
         _filter: function () {
             let oFilter = null;
-            if (this._oGlobalFilter && this._oPriceFilter) {
-                oFilter = new Filter([this._oGlobalFilter, this._oPriceFilter], true);
+            if (this._oGlobalFilter) {
+                oFilter = new Filter([this._oGlobalFilter], true);
             } else if (this._oGlobalFilter) {
                 oFilter = this._oGlobalFilter;
-            } else if (this._oPriceFilter) {
-                oFilter = this._oPriceFilter;
             }
-
             this.byId("requestsTable").getBinding().filter(oFilter, "Application");
         },
         _requestBusy: function () {
@@ -225,9 +196,9 @@ sap.ui.define([
                 });
                 this.getView().setModel(oViewModel, "view");
             }
-
+            const oBinding = oTable.getBinding("rows");
+            oBinding.attachChange(this._updateTableCount, this);
             oTable.attachEventOnce("rowsUpdated", function () {
-                const oBinding = oTable.getBinding("rows");
                 if (oBinding) {
                     oBinding.attachEvent("dataReceived", this._updateTableCount, this);
                     this._updateTableCount();
@@ -237,14 +208,18 @@ sap.ui.define([
             }, this);
         },
         _getParametersApp: async function () {
-            let oModelApi = this.getOwnerComponent().getModel();
+            const oModelApi = this.getOwnerComponent().getModel();
             const oModelC0001 = await service.readDataERP("/cust_INETUM_SOL_C_0000", oModelApi)
-            let oNewModelC0000 = new JSONModel(oModelC0001.data.results)
+            const oNewModelC0000 = new JSONModel(oModelC0001.data.results)
             this.getOwnerComponent().setModel(oNewModelC0000, "cust_INETUM_SOL_C_0000");
+            const sTitle = Lenguaje.obtenerNombreConcatenado('cust_titulo3');
+            //Asignamos el título de la página a un modelo
+            const oNewModelTitle = new JSONModel({ title: oModelC0001.data.results[0][sTitle] || 'Pendientes de aprobar'})
+            this.getOwnerComponent().setModel(oNewModelTitle, "modelTitle");
         },
         _getMainDataEntity: async function () {
             let oModel = this.getOwnerComponent().getModel();
-            let oViewModelC0000 = this.getOwnerComponent().getModel("cust_INETUM_SOL_C_0000");
+            let oViewModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
             const oParameters = {
                 bParam: true,
                 oParameter: {
@@ -288,7 +263,6 @@ sap.ui.define([
                 MessageToast.show("Error al cargar los datos");
             } finally {
                 this.getView().getModel("busy").setProperty("/tableBusy", false);
-                this._getRowsTable();
             }
         },
         _getNameTypeRequest: async function (oModel, oData) {

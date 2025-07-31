@@ -72,6 +72,7 @@
     "models": {
       "i18n": {
         "type": "sap.ui.model.resource.ResourceModel",
+        "preload": true,
         "settings": {
           "bundleName": "com.amb.ambpendiapro.i18n.i18n"
         }
