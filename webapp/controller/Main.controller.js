@@ -19,12 +19,25 @@ sap.ui.define([
 
     return Controller.extend("com.amb.ambpendiapro.controller.Main", {
         formatter: formatter,
-        async onInit() {
-            // this._loadUserInfo();
+        onInit() {
+            this._managementRouter();
             this._requestBusy();
-            await this._getParametersApp();
-            await this._getMainDataEntity();
-            this._getRowsTable();
+            this._initializeAsyncData();
+        },
+        /**
+        * Realiza el cargue de la información principal de manera asyncrona,
+        * esto para que la siguiente función espere a que la primera haga todo su
+        * proceso.
+        * @private
+        */
+        _initializeAsyncData: async function() {
+            try {     
+                await this._getParametersApp();
+                await this._getMainDataEntity();
+                this._getRowsTable();
+            } catch (oError) {
+                console.log(oError)
+            }
         },
         _loadUserInfo: function () {
             // Comprueba si el servicio UserInfo está disponible
@@ -74,26 +87,51 @@ sap.ui.define([
                 this.getView().setModel(oUserModel, "userModel");
             }
         },
+        /**
+        * Realiza actualización en sf aprobando una solicitud.
+        * @param {sap.ui.base.Event} oEvent El objeto del evento de la tabla.
+        * @public
+        */
         onApprove: function (oEvent) {
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
             Operaciones.actionApprove(oContext, this);
         },
+        /**
+        * Realiza actualización en sf rechazando una solicitud.
+        * @param {sap.ui.base.Event} oEvent El objeto del evento de la tabla.
+        * @public
+        */
         onReject: function (oEvent) {
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
             Operaciones.actionReject(oContext, this);
         },
+        /**
+        * Realiza actualización en sf retrocede una solicitud.
+        * @param {sap.ui.base.Event} oEvent El objeto del evento de la tabla.
+        * @public
+        */
         onReturn: function (oEvent) {
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
             Operaciones.actionReturn(oContext, this);
         },
+        /**
+        * Realiza actualización en sf devuelve la solicitud.
+        * @param {sap.ui.base.Event} oEvent El objeto del evento de la tabla.
+        * @public
+        */
         onBack: function (oEvent) {
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001").getObject();
             Operaciones.actionBack(oContext, this);
         },
+        /**
+        * Realiza redireccionamiento a nueva ruta de form dinámico.
+        * @param {sap.ui.base.Event} oEvent El objeto del evento de la tabla.
+        * @public
+        */
         onDetailRequest: function (oEvent) {
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001");
@@ -105,18 +143,30 @@ sap.ui.define([
             });
 
         },
+        /**
+        * Manejador de la ruta.
+        * Se ejecuta cada vez que el usuario navega a esta vista. Su propósito es
+        * ejecutar siempre una función cada que se navega a la ruta.
+        * @private
+        */
         _managementRouter: function () {
-            this.getOwnerComponent().getRoute("RoutelistaSolicitudes").attachPatternMatched(this._onRouteMatched, this);
+            this.getOwnerComponent().getRouter().getRoute("RouteMain").attachPatternMatched(this._onRouteMatched, this);
         },
+        /**
+         * Manejador para el evento 'patternMatched' de la ruta.
+         * Se ejecuta cada vez que el usuario navega a esta vista. Su propósito es
+         * limpiar los filtros de la tabla de solicitudes pendnientes de aprobar.
+         * @param {sap.ui.base.Event} oEvent El objeto del evento de la ruta.
+         * @private
+         */
         _onRouteMatched: function (oEvent) {
-            var oList = this.byId("requestList");
-            var oBinding = oList.getBinding("items");
-
-            // Elimina los filtros que se crearon al ingresar a alguna solicitud y volver
-            if (oBinding) {
-                oBinding.filter([]);
-            }
+            this.clearAllSortingsFilters();
         },
+        /**
+         * Realiza conteo de las filas de la tabla luego que esta renderizada
+         * y guarda el conteo en un modelo
+         * @private
+         */
         _updateTableCount: function () {
             var oTable = this.byId("requestsTable");
             var oBinding = oTable.getBinding("rows");
@@ -124,16 +174,21 @@ sap.ui.define([
             let oViewModel = this.getView().getModel("view");
             oViewModel.setProperty("/filteredCount", iFilteredCount);
         },
+        /**
+         * Elimina el ordenamiento y los filtros aplicados en la tabla
+         * aprimiendo la "X" junto al input de filtro global
+         * @private
+         */
         clearAllSortingsFilters: function (oEvent) {
             var oTable = this.byId("requestsTable");
-            oTable.getBinding().sort(null);
 
+            oTable.getBinding()?.sort(null);
             var oUiModel = this.getView().getModel("modeloLocal");
             oUiModel.setProperty("/globalFilter", "");
             oUiModel.setProperty("/availabilityFilterOn", false);
 
             this._oGlobalFilter = null;
-            this._filter();
+            // this._filter();
 
             var aColumns = oTable.getColumns();
             for (var i = 0; i < aColumns.length; i++) {
@@ -141,7 +196,12 @@ sap.ui.define([
             }
 
             this._resetSortingState();
+
         },
+        /**
+         * Quita el ordenamiento de cada columna en la tabla
+         * @private
+         */
         _resetSortingState: function () {
             var oTable = this.byId("requestsTable");
             var aColumns = oTable.getColumns();
@@ -149,6 +209,10 @@ sap.ui.define([
                 aColumns[i].setSorted(false);
             }
         },
+        /**
+         * Crea los filtros conforme la query obtenida en el input filter global
+         * @public
+         */
         filterGlobally: function (oEvent) {
             var sQuery = oEvent.getParameter("query");
             this._oGlobalFilter = null;
@@ -164,6 +228,10 @@ sap.ui.define([
             this._filter();
             this._updateTableCount();
         },
+        /**
+         * Aplica los filtros a la tabla
+         * @private
+         */
         _filter: function () {
             let oFilter = null;
             if (this._oGlobalFilter) {
@@ -173,6 +241,10 @@ sap.ui.define([
             }
             this.byId("requestsTable").getBinding().filter(oFilter, "Application");
         },
+        /**
+         * Crea nuevo modelo para variable de busy table (boolean)
+         * @private
+         */
         _requestBusy: function () {
             const oModelScf = this.getOwnerComponent().getModel();
             const oLocalModel = this.getView().getModel("busy");
@@ -187,6 +259,13 @@ sap.ui.define([
                 oLocalModel.setProperty("/tableBusy", false); // Asegura que esté en false al inicio
             }
         },
+        /**
+         * Configura los listeners de eventos en el binding de la tabla de solicitudes.
+         * Se asegura de que la función _updateTableCount se ejecute cada vez que los
+         * datos de la tabla cambian (filtrado, ordenamiento, carga inicial) para
+         * actualizar el contador de filas visibles.
+         * @private
+         */
         _getRowsTable: function () {
             let oViewModel = this.getView().getModel("view");
             let oTable = this.byId("requestsTable");
@@ -207,6 +286,11 @@ sap.ui.define([
                 }
             }, this);
         },
+        /**
+         * Obtiene y los títulos y textos de botones o placeholders
+         * y establece el nombre de la vista principal
+         * @private
+         */
         _getParametersApp: async function () {
             const oModelApi = this.getOwnerComponent().getModel();
             const oModelC0001 = await service.readDataERP("/cust_INETUM_SOL_C_0000", oModelApi)
@@ -214,9 +298,15 @@ sap.ui.define([
             this.getOwnerComponent().setModel(oNewModelC0000, "cust_INETUM_SOL_C_0000");
             const sTitle = Lenguaje.obtenerNombreConcatenado('cust_titulo3');
             //Asignamos el título de la página a un modelo
-            const oNewModelTitle = new JSONModel({ title: oModelC0001.data.results[0][sTitle] || 'Pendientes de aprobar'})
+            const oNewModelTitle = new JSONModel({ title: oModelC0001.data.results[0][sTitle] || 'Pendientes de aprobar' })
             this.getOwnerComponent().setModel(oNewModelTitle, "modelTitle");
         },
+        /**
+         * Obtiene y filtra los datos principales para la tabla de vista principal
+         * se realiza lógica para mostrar solicitudes unicamente donde el usuario
+         * conectado sea aprobador
+         * @private
+         */
         _getMainDataEntity: async function () {
             let oModel = this.getOwnerComponent().getModel();
             let oViewModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
@@ -237,14 +327,14 @@ sap.ui.define([
                         // Modificamos el elemento con los datos obtenidos
                         element.cust_nombreSolicitud = oNameData?.cust_nombreSol_defaultValue;
                         element.cust_nombreTSolicitud = oNameData?.cust_idTipo2Nav?.cust_nombreTSol_defaultValue;
-                        
+
                         return element;
                     } catch (oError) {
                         console.error(oError);
                     }
                 });
                 const aEnrichedData = await Promise.all(aEnrichmentPromises);
-            
+
                 const aFiltered = aEnrichedData.filter(element => {
                     return element.cust_steps.results.some(step => step.cust_aprobUser == "SFADMIN_LBM" && step.cust_activeStep === false);
                 }).map(element => {
@@ -252,12 +342,12 @@ sap.ui.define([
                     element.cust_vto = oViewModelC0000.oData[0][sCustVto];
                     return element;
                 });
-        
+
                 // console.log("Datos finales filtrados y mapeados:", aFiltered);
-                
+
                 const oNewModelDm0001 = new JSONModel({ cust_INETUM_SOL_DM_0001: aEnrichedData });
                 this.getOwnerComponent().setModel(oNewModelDm0001, "cust_INETUM_SOL_DM_0001");
-        
+
             } catch (oError) {
                 console.error("Error al cargar los datos principales:", oError);
                 MessageToast.show("Error al cargar los datos");
@@ -265,6 +355,12 @@ sap.ui.define([
                 this.getView().getModel("busy").setProperty("/tableBusy", false);
             }
         },
+        /**
+         * Obtiene el nombre y tipo de solicitud para mostrar en la tabla
+         * @param {object} oModel Modelo de conexión de la api
+         * @param {object} oData Datos de la entidad DM_0001 para hacer la consulta
+         * @private
+         */
         _getNameTypeRequest: async function (oModel, oData) {
             let oKeyC0001 = oModel.createKey('/cust_INETUM_SOL_C_0001', {
                 cust_object: oData.cust_object
@@ -285,39 +381,6 @@ sap.ui.define([
             } catch (error) {
                 console.log(error)
             }
-        },
-        /**
-        * Carga, procesa y agrupa la lista de solicitudes desde la entidad C_0001.
-        * @private
-        * @returns {Promise}
-        */
-        _cargarListaDeSolicitudes: async function () {
-            const oModel = this.getOwnerComponent().getModel();
-
-            // Filtro para el llamado al back
-            const aFilters = [
-                new sap.ui.model.Filter("cust_status", sap.ui.model.FilterOperator.EQ, "A")
-            ];
-
-            const oParameters = {
-                bParam: true,
-                oParameter: {
-                    "$expand": "cust_idTipo2Nav"
-                }
-            };
-
-            // Se hace un llamado a la entidad de las solicitudes hijas 'C_0001', 
-            // con un parametro de expand a las solicitudes padres 'cust_idTipoNav' ('C_0002' a través de la navegación)
-            return service.readDataERP("/cust_INETUM_SOL_C_0001", oModel, aFilters, oParameters)
-                .then((oData) => {
-                    const finalData = this._procesarYAgruparResultados(oData.data.results);
-
-                    // Se pasa el array a un modelo json para pasarlo a la vista
-                    const oGroupedModel = new JSONModel({
-                        requests: finalData
-                    });
-                    this.getOwnerComponent().setModel(oGroupedModel, "groupedModel_0001");
-                });
         },
         /**
          * Procesa y transforma los resultados del servicio para agruparlos por tipo.

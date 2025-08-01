@@ -12,8 +12,10 @@
                 <Title id="_IDGenTitle" text="{modelTitle>/title}" level="H2" class="sapUiTinyMarginBegin"/>
             </Toolbar>
         </customHeader>
-        <ScrollContainer id="scroll" height="100%" vertical="true">
-            <VBox id="formContainer" class="sapUiSmallMargin">
+        <ScrollContainer id="scroll" height="100%" vertical="true" >
+            <VBox id="formContainer" class="sapUiSmallMargin" expandable="true"
+                            expanded="true"
+>
                 <f:Form id="FormToolbar" editable="true" ariaLabelledBy="Title1">
                     <f:toolbar>
                         <Toolbar id="_IDGenToolbar1">

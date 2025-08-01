@@ -9,7 +9,10 @@ sap.ui.define([
             manifest: "json",
             interfaces: [
                 "sap.ui.core.IAsyncContentCreation"
-            ]
+            ],
+            // config: {
+            //     fullWidth: false
+            // },
         },
 
         init() {

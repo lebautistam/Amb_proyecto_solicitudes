@@ -109,7 +109,6 @@ sap.ui.define([
 
         /**
          * Ejecuta múltiples operaciones (crear, actualizar, eliminar) en un solo lote (batch).
-         * Es la función más flexible para operaciones en lote.
          * @param {sap.ui.model.odata.v2.ODataModel} oModel - El modelo OData del servicio.
          * @param {object[]} aOperations - Un array de objetos, cada uno definiendo una operación.
          * @param {'create'|'update'|'remove'} aOperations[].type - El tipo de operación.

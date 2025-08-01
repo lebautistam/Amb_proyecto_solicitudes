@@ -15,7 +15,14 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
 ], function (FormElement, Label, Input, DatePicker, TextArea, Select, Item, UploadCollection, MessageToast, ListMode, Lenguaje, service, Filter, FilterOperator) {
     "use strict";
-    function _viewAttachment(attachment, oController) {
+    /**
+    * construye un objeto de adjunto para visualizar
+    * y descargarlo
+    * @param {object} attachment metadata del objeto adjunto
+    * @returns {object} item a agregar a la vista
+    * @public
+    */
+    function _viewAttachment(attachment) {
         const oItem = new sap.m.UploadCollectionItem({
             fileName: attachment.fileName,
             mimeType: attachment.mimeType,
@@ -54,6 +61,13 @@ sap.ui.define([
         return oItem;
     }
     /**
+    * construye campos dinámicamente conforme al tipo de campo y longitud
+    * @param {object} oController objeto de la vista donde se llama la función
+    * @param {string} sContainerId id del contenedor donde se crearan los campos del form
+    * @param {object} aCampos campos del formulario a crear
+    * @public
+    */
+    /**
      * aCampos: array de objetos del nuevo modelo
      * {
      *   cust_etiquetaInput_en_US: "Nombre",
@@ -86,7 +100,7 @@ sap.ui.define([
                 default: sTipoControl = "Input";
             }
             //Consultamos el valor de los campos Select
-            if(sTipoControl === "Select"){
+            if (sTipoControl === "Select") {
                 const aFilter = [
                     new Filter("optionId", FilterOperator.EQ, campo.cust_value)
                 ];
@@ -161,26 +175,26 @@ sap.ui.define([
                 service.readDataERP("/Attachment", oModel, aFilter)
                     .then(data => {
                         if (data.data.results.length) {
-                            const oItem = this._viewAttachment(data.data.results[0], oController);
+                            const oItem = this._viewAttachment(data.data.results[0]);
                             oControl.addItem(oItem);
                         }
                     })
                     .catch(error => {
                         console.error("Error: ", error.message);
                     });
-                // const oAttachment = Promise.all(oResult);
-                // console.log(oAttachment)
             }
-
-            // if (typeof oControl.setRequired === "function") {
-            //     oControl.setRequired(!!campo.cust_mandatory);
-            // }
 
             oFormElement.addField(oControl);
             oFormContainer.addFormElement(oFormElement);
         });
     }
-
+    /**
+    * crea la cadena url para descargar o visualizar el adjunto
+    * @param {object} sMimeType tipo de archivo
+    * @param {object} sBase64Content codigo base64 del
+    * @returns {string} url
+    * @public
+    */
     function _crearDataURI(sMimeType, sBase64Content) {
         return `data:${sMimeType};base64,${sBase64Content}`;
     }

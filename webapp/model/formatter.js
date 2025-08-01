@@ -5,30 +5,38 @@ sap.ui.define([
     "use strict";
     return {
         service: service,
+        /**
+        * Realiza la validación de las fechas de vencimiento de la solicitud
+        * @param {date} sCustFechaVenci fecha de vencimiento de la solicitud
+        * @param {string} sCustVto texto para indicar que no esta vencida
+        * @returns {string} según la condición cumplida
+        * @public
+        */
         formatVencimiento: function (sCustFechaVenci, sCustVto) {
 
-            if (!sCustFechaVenci || sCustFechaVenci === null || sCustFechaVenci === "null") {
-                return "";
-            }
-            if (!sCustFechaVenci instanceof Date || isNaN(sCustFechaVenci.getTime())) {
-                return "";
-            }
-            let oToday = new Date();
-            let oCusFeSol = new Date(sCustFechaVenci);
+            if (!sCustFechaVenci || sCustFechaVenci === null || sCustFechaVenci === "null") return '' ;
+
+            if (!sCustFechaVenci instanceof Date || isNaN(sCustFechaVenci.getTime())) return '';
+
+            const oToday = new Date();
+            const oCusFeSol = new Date(sCustFechaVenci);
             if (oCusFeSol >= oToday) {
-                // const oDateFormat = DateFormat.getDateInstance({
-                //     style: "medium"
-                //     // pattern: "dd/MM/yyyy"
-                // });
                 return sCustVto;
-            }else{
-                let sDiasVencidos = oToday.getTime() - oCusFeSol.getTime();
+            } else {
+                const sDiasVencidos = oToday.getTime() - oCusFeSol.getTime();
                 const daysSinceRequest = Math.floor(sDiasVencidos / (1000 * 60 * 60 * 24));
                 return `Vencida \n${daysSinceRequest} días`;
             }
 
         },
-        formatVencimientoStatus: function(sCustFechaVenci, sCustVto){
+        /**
+        * Realiza la validación de las fechas de vencimiento de la solicitud
+        * @param {date} sCustFechaVenci fecha de vencimiento de la solicitud
+        * @param {string} sCustVto texto para indicar que no esta vencida
+        * @returns {sap.ui.core.ValueState} El estado para el control ObjectStatus (Error, Warning, Success, None).
+        * @public
+        */
+        formatVencimientoStatus: function (sCustFechaVenci, sCustVto) {
             if (!sCustFechaVenci || sCustFechaVenci === null || sCustFechaVenci === "null") {
                 return "None";
             }
@@ -40,17 +48,30 @@ sap.ui.define([
             // console.log(oToday, "hoyno: " + oCusFeSol);
             if (oCusFeSol >= oToday) {
                 return "None";
-            }else{
+            } else {
                 return `Error`;
             }
 
         },
+        /**
+        * Formatea un número con decimales
+        * @param {int} sValue número a hacer flotante
+        * @returns {float} número convertido a flotante
+        * @public
+        */
         numberUnit: function (sValue) {
             if (!sValue) {
                 return "";
             }
             return parseFloat(sValue).toFixed(2);
         },
+        /**
+        * Valida que la condición se cumpla o no
+        * que una solicitud este en curso "EC"
+        * @param {string} cust_status estatus de la solicitud
+        * @returns {boolean} (true) or (false)
+        * @public
+        */
         inCourse: function (cust_status) {
             return cust_status === 'EC';
         },

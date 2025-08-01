@@ -17,31 +17,53 @@ sap.ui.define([
             const oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteVisualizacionSolicitud").attachPatternMatched(this._onObjectMatched, this);
         },
+        /**
+        * Realiza actualización en sf aprueba la solicitud.
+        * @param {sap.ui.base.Event} oEvent El objeto del evento.
+        * @public
+        */
         onApprove: function (oEvent) {
+            console.log(oEvent)
             const oModelFiltered = this.getOwnerComponent().getModel("filteredModelDM_0001");
             const oRequest = oModelFiltered.getProperty("/request");
             Operaciones.actionApprove(oRequest, this, true);
         },
+        /**
+        * Realiza actualización en sf rechaza la solicitud.
+        * @param {sap.ui.base.Event} oEvent El objeto del evento.
+        * @public
+        */
         onReject: function (oEvent) {
             const oModelFiltered = this.getOwnerComponent().getModel("filteredModelDM_0001");
             const oRequest = oModelFiltered.getProperty("/request");
             Operaciones.actionReject(oRequest, this, true);
         },
+        /**
+        * Realiza actualización en sf retrocede la solicitud.
+        * @param {sap.ui.base.Event} oEvent El objeto del evento.
+        * @public
+        */
         onReturn: function (oEvent) {
             const oModelFiltered = this.getOwnerComponent().getModel("filteredModelDM_0001");
             const oRequest = oModelFiltered.getProperty("/request");
             Operaciones.actionReturn(oRequest, this, true);
         },
+        /**
+        * Realiza actualización en sf regresa la solicitud.
+        * @param {sap.ui.base.Event} oEvent El objeto del evento.
+        * @public
+        */
         onBack: function (oEvent) {
             const oModelFiltered = this.getOwnerComponent().getModel("filteredModelDM_0001");
             const oRequest = oModelFiltered.getProperty("/request");
             Operaciones.actionBack(oRequest, this, true);
         },
         /**
-         * Navega a la página anterior en el historial de navegación.
-         * Si no hay una página anterior en el historial de la aplicación, navega a la vista
-         * principal ("RoutelistaSolicitudes") como ruta por defecto.
-         */
+        * Navega a la página anterior en el historial de navegación.
+        * Si no hay una página anterior en el historial de la aplicación, navega a la vista
+        * principal ("RouteMain") como ruta por defecto.
+        * @public
+        */
         onNavBack: function () {
             var oHistory = History.getInstance();
             var sPreviousHash = oHistory.getPreviousHash();
@@ -52,62 +74,57 @@ sap.ui.define([
                 var oRouter = this.getOwnerComponent().getRouter();
                 oRouter.navTo("RouteMain", {}, true); // Ruta por defecto si no hay historial
             }
-        },
+        },        /**
+        * Redirige a la vista (RouteMain)
+        * @public
+        */
         onCancel: function () {
             this.onNavBack();
         },
+        /**
+        * Manejador para el evento 'patternMatched' de la ruta.
+        * Se ejecuta cada vez que el usuario navega a esta vista. Su propósito es
+        * obtener los parametros de url, consultar datos y pasar datos a la función 
+        * generarFormulario
+        * @param {sap.ui.base.Event} oEvent El objeto del evento de la ruta.
+        * @private
+        */
         _onObjectMatched: function (oEvent) {
             const sExternalCode = oEvent.getParameter("arguments").externalCode;
             const sEffectiveDate = oEvent.getParameter("arguments").effectiveStartDate;
-            const oRequestDetail = this._buscarSolicitudEnModeloDM(sExternalCode, sEffectiveDate);
+            const oRequestDetail = this._buscarSolicitudEnModeloDM(sExternalCode);
             if (oRequestDetail) {
                 this._prepararModeloFiltrado(oRequestDetail);
-                // const oRequestHead = this._buscarSolicitudEnModeloC(oRequestDetail.cust_object);
-                // if (!oRequestHead) {
-                //     console.warn("No se encontró la solicitud con ID:", sSolicitudID);
-                //     return;
-                // }
             }
 
             const aCampos = oRequestDetail.cust_solFields.results;
-            
+            console.log(aCampos)
             creadorFormulario.generarFormulario(this, "FormularioDinamico_visualizacion", aCampos);
         },
-        _buscarSolicitudEnModeloDM: function (sExternalCode, sEffectiveDate) {
+        /**
+        * Se encarga de buscar la solicitud en el modelo por sus ids
+        * @param {int} sExternalCode Id de la solicitud
+        * @return {array} Array con la solicitud seleccionada para ver detalle
+        * @private
+        */
+        _buscarSolicitudEnModeloDM: function (sExternalCode) {
             const oGrupoModelos = this.getOwnerComponent().getModel("cust_INETUM_SOL_DM_0001");
-            if(!oGrupoModelos){
+            if (!oGrupoModelos) {
                 this.onNavBack();
             }
             const oSolicitudes = oGrupoModelos.getProperty("/cust_INETUM_SOL_DM_0001");
 
-            const timestampAsNumber = parseInt(sEffectiveDate); // Opción 1: parseInt (recomendado por claridad y seguridad)
+            // const timestampAsNumber = parseInt(sEffectiveDate); // Opción 1: parseInt (recomendado por claridad y seguridad)
 
-            if (isNaN(timestampAsNumber)) { // Verificar si la conversión fue exitosa
-                console.error("El timestamp de la URL no es un número válido:", sEffectiveDate);
-                sap.m.MessageToast.show("Error: Fecha de inicio inválida en la URL.");
-                return;
-            }
-            const oEffectiveDate = String(new Date(timestampAsNumber));
+            // if (isNaN(timestampAsNumber)) { // Verificar si la conversión fue exitosa
+            //     console.error("El timestamp de la URL no es un número válido:", sEffectiveDate);
+            //     sap.m.MessageToast.show("Error: Fecha de inicio inválida en la URL.");
+            //     return;
+            // }
+            // const oEffectiveDate = String(new Date(timestampAsNumber));
 
             const oRequest = oSolicitudes.find(item => item.externalCode === sExternalCode);
             return oRequest;
-        },
-        _buscarSolicitudEnModeloC: function (sCust_Object) {
-            const oGrupoModelos = this.getOwnerComponent().getModel("groupedModel_0001");
-            const aSolicitudes = oGrupoModelos.getProperty("/requests");
-            let oResultado = null;
-
-            aSolicitudes.forEach(function (oTipo) {
-                const oItemEncontrado = oTipo.items.find(oItem => oItem.objeto === sCust_Object);
-                if (oItemEncontrado) {
-                    oResultado = {
-                        tipo: oTipo.type,
-                        solicitud: oItemEncontrado
-                    };
-                }
-            });
-
-            return oResultado;
         },
         /**
          * Crea y asigna un nuevo modelo JSON que contiene únicamente la solicitud seleccionada.
@@ -120,7 +137,7 @@ sap.ui.define([
             });
             this.getOwnerComponent().setModel(oModeloFiltrado, "filteredModelDM_0001");
         },
-        //Función para cargar adjunto
+
         /**
          * Manejador para el evento de carga de archivos (generalmente 'change' del FileUploader).
          * Lee el archivo seleccionado, lo convierte a formato Base64 y almacena el contenido

@@ -324,6 +324,7 @@ sap.ui.define([
                     oModelApi.update(oKeyDM0001, oPayloadPrincipal, {
                         groupId: sGroupId
                     });
+                    debugger;
                     oModelApi.submitChanges({
                         groupId: sGroupId,
                         success: (oData, oResponse) => {
