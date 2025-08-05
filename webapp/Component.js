@@ -10,9 +10,9 @@ sap.ui.define([
             interfaces: [
                 "sap.ui.core.IAsyncContentCreation"
             ],
-            // config: {
-            //     fullWidth: false
-            // },
+            config: {
+                fullWidth: false
+            },
         },
 
         init() {

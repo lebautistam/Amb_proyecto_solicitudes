@@ -13,7 +13,7 @@ sap.ui.define([
     "../service/service",
     "../utils/utils",
     "../utils/Operaciones",
-    "../utils/Lenguaje",
+    "../utils/Lenguaje"
 ], (Controller, Log, JSONModel, Filter, FilterOperator, DateFormat, ToolbarSpacer, jQuery, MessageBox, MessageToast, formatter, service, utils, Operaciones, Lenguaje) => {
     "use strict";
 
@@ -23,6 +23,61 @@ sap.ui.define([
             this._managementRouter();
             this._requestBusy();
             this._initializeAsyncData();
+            $.ajax({
+                url: sap.ui.require.toUrl("com/amb/ambpendiapro") + "/user-api/currentUser",
+                method: "GET",
+                async: true,
+                success: function (data) {
+                    console.log("Información del usuario:", data);
+                    var oViewUserModel = new JSONModel([{
+                        "displayName": data.displayName,
+                        "email": data.email,
+                        "firstname": data.firstname,
+                        "lastname": data.lastname,
+                        "name": data.name
+                    }]);
+
+                    // if (urlParameters && urlParameters.length > 1) {
+                    //     if (urlParameters[1] && urlParameters[1].includes("user")) {
+                    //         let usuarioLogueado = urlParameters[1].split("user=")[1];
+                    //         if (usuarioLogueado) {
+                    //             usuarioLogueado = usuarioLogueado.includes("#") ? usuarioLogueado.replace(/#/g, "") : usuarioLogueado;
+                    //         }
+                    //         oViewUserModel.setProperty("/0/name", usuarioLogueado);
+                    //     }
+                    // }
+                    // that.getView().setModel(oViewUserModel, "oModelUser");
+                    // sap.ui.getCore().setModel(oViewUserModel, "oModelUser");
+                    // sessionStorage.setItem("displayName", oViewUserModel.getProperty("/0/name"));
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log(errorThrown, textStatus, jqXHR)
+                    let oViewUserModel = new JSONModel([{
+                        // "displayName": VKH3V6U 'CARRETO',AGUILARJ DL0O9N5 SVALLEJ A611CM9 SBOUSSO SPITARC DGLBZ4X U5JXA37 SQK4USQ MENA
+                        "displayName": '',
+                        "email": '',
+                        "firstname": '',
+                        "lastname": '',
+                        "name": ''
+                    }]);
+                    //Para probar en local quitar el return,caida puntual y el msg si no queremos que aparezca
+                    /* sap.m.MessageBox.error(i18n.getProperty("msgCaidaPuntual"));
+                                      caidaPuntual=true;
+                                      return; */
+                    // if (urlParameters && urlParameters.length > 1) {
+                    //     if (urlParameters[1] && urlParameters[1].includes("user")) {
+                    //         let usuarioLogueado = urlParameters[1].split("user=")[1];
+                    //         if (usuarioLogueado) {
+                    //             usuarioLogueado = usuarioLogueado.includes("#") ? usuarioLogueado.replace(/#/g, "") : usuarioLogueado;
+                    //         }
+                    //         oViewUserModel.setProperty("/0/name", usuarioLogueado);
+                    //     }
+                    // }
+                    // that.getView().setModel(oViewUserModel, "oModelUser");
+                    // sap.ui.getCore().setModel(oViewUserModel, "oModelUser");
+                    // sessionStorage.setItem("displayName", oViewUserModel.getProperty("/0/name"));
+                }
+            });
         },
         /**
         * Realiza el cargue de la información principal de manera asyncrona,
@@ -30,13 +85,23 @@ sap.ui.define([
         * proceso.
         * @private
         */
-        _initializeAsyncData: async function() {
-            try {     
+        _initializeAsyncData: async function () {
+            try {
+                this.getView().getModel("busy").setProperty("/tableBusy", true);
                 await this._getParametersApp();
                 await this._getMainDataEntity();
-                this._getRowsTable();
+                await this._getRowsTable();
             } catch (oError) {
+                Log.error("Fallo al inicializar los datos de la vista principal", JSON.stringify(oError, null, 2), this.getMetadata().getName());
+                const oParams = {
+                    title: "Error de Carga",
+                    details: "Por favor, intente refrescar la página. Si el problema persiste, contacte al soporte técnico.",
+                    actions: [MessageBox.Action.CLOSE]
+                }
+                utils.onShowMessage("Hubo un error al cargar los datos", "error", null, oParams)
                 console.log(oError)
+            } finally {
+                this.getView().getModel("busy").setProperty("/tableBusy", false);
             }
         },
         _loadUserInfo: function () {
@@ -276,15 +341,11 @@ sap.ui.define([
                 this.getView().setModel(oViewModel, "view");
             }
             const oBinding = oTable.getBinding("rows");
-            oBinding.attachChange(this._updateTableCount, this);
-            oTable.attachEventOnce("rowsUpdated", function () {
-                if (oBinding) {
-                    oBinding.attachEvent("dataReceived", this._updateTableCount, this);
-                    this._updateTableCount();
-                } else {
-                    console.warn("Binding de filas de la tabla no encontrado después de rowsUpdated.");
-                }
-            }, this);
+            if (oBinding) {
+                oBinding.attachChange(this._updateTableCount, this);
+                oBinding.attachEvent("dataReceived", this._updateTableCount, this);
+                this._updateTableCount();
+            }
         },
         /**
          * Obtiene y los títulos y textos de botones o placeholders
@@ -317,43 +378,29 @@ sap.ui.define([
                     "$select": "cust_solFields,effectiveStartDate,externalCode,cust_solicitante,cust_fechaSol,cust_deadLine,cust_steps,cust_indexStep,cust_maxStep,cust_status,cust_object"
                 }
             };
-            this.getView().getModel("busy").setProperty("/tableBusy", true);
-            try {
-                const oData = await service.readDataERP("/cust_INETUM_SOL_DM_0001", oModel, [], oParameters);
-                const aEnrichmentPromises = oData.data.results.map(async (element) => {
-                    try {
-                        // Esperamos a que la llamada anidada termine PARA CADA elemento
-                        const oNameData = await this._getNameTypeRequest(oModel, element);
-                        // Modificamos el elemento con los datos obtenidos
-                        element.cust_nombreSolicitud = oNameData?.cust_nombreSol_defaultValue;
-                        element.cust_nombreTSolicitud = oNameData?.cust_idTipo2Nav?.cust_nombreTSol_defaultValue;
+            const oData = await service.readDataERP("/cust_INETUM_SOL_DM_0001", oModel, [], oParameters);
+            const aEnrichmentPromises = oData.data.results.map(async (element) => {
+                // Esperamos a que la llamada anidada termine PARA CADA elemento
+                const oNameData = await this._getNameTypeRequest(oModel, element);
+                // Modificamos el elemento con los datos obtenidos
+                element.cust_nombreSolicitud = oNameData?.cust_nombreSol_defaultValue;
+                element.cust_nombreTSolicitud = oNameData?.cust_idTipo2Nav?.cust_nombreTSol_defaultValue;
+                return element;
+            });
+            const aEnrichedData = await Promise.all(aEnrichmentPromises);
 
-                        return element;
-                    } catch (oError) {
-                        console.error(oError);
-                    }
-                });
-                const aEnrichedData = await Promise.all(aEnrichmentPromises);
+            const aFiltered = aEnrichedData.filter(element => {
+                return element.cust_steps.results.some(step => step.cust_aprobUser == "SFADMIN_LBM" && step.cust_activeStep === false);
+            }).map(element => {
+                const sCustVto = Lenguaje.obtenerNombreConcatenado("cust_vto");
+                element.cust_vto = oViewModelC0000.oData[0][sCustVto];
+                return element;
+            });
 
-                const aFiltered = aEnrichedData.filter(element => {
-                    return element.cust_steps.results.some(step => step.cust_aprobUser == "SFADMIN_LBM" && step.cust_activeStep === false);
-                }).map(element => {
-                    const sCustVto = Lenguaje.obtenerNombreConcatenado("cust_vto");
-                    element.cust_vto = oViewModelC0000.oData[0][sCustVto];
-                    return element;
-                });
+            // console.log("Datos finales filtrados y mapeados:", aFiltered);
 
-                // console.log("Datos finales filtrados y mapeados:", aFiltered);
-
-                const oNewModelDm0001 = new JSONModel({ cust_INETUM_SOL_DM_0001: aEnrichedData });
-                this.getOwnerComponent().setModel(oNewModelDm0001, "cust_INETUM_SOL_DM_0001");
-
-            } catch (oError) {
-                console.error("Error al cargar los datos principales:", oError);
-                MessageToast.show("Error al cargar los datos");
-            } finally {
-                this.getView().getModel("busy").setProperty("/tableBusy", false);
-            }
+            const oNewModelDm0001 = new JSONModel({ cust_INETUM_SOL_DM_0001: aEnrichedData });
+            this.getOwnerComponent().setModel(oNewModelDm0001, "cust_INETUM_SOL_DM_0001");
         },
         /**
          * Obtiene el nombre y tipo de solicitud para mostrar en la tabla
@@ -375,12 +422,8 @@ sap.ui.define([
                     "$select": "cust_idTipo2Nav,cust_nombreSol_ca_ES,cust_nombreSol_defaultValue,cust_nombreSol_en_DEBUG,cust_nombreSol_en_US,cust_nombreSol_es_ES,cust_nombreSol_localized"
                 }
             };
-            try {
-                const oDataC0001 = await service.readDataERP("/cust_INETUM_SOL_C_0001", oModel, aFilter, oParameters)
-                return oDataC0001.data.results[0]
-            } catch (error) {
-                console.log(error)
-            }
+            const oDataC0001 = await service.readDataERP("/cust_INETUM_SOL_C_0001", oModel, aFilter, oParameters)
+            return oDataC0001.data.results[0]
         },
         /**
          * Procesa y transforma los resultados del servicio para agruparlos por tipo.
