@@ -50,10 +50,27 @@ sap.ui.define([
         },
 
         showBI: function (value) {
+            console.log("entro BI", value)
             if (value) {
                 BusyIndicator.show(0);
             } else {
                 BusyIndicator.hide();
+            }
+        },
+
+        _deleteProcessedRequest: function (oContext, oView) {
+            try {
+                const oModel = oView.getOwnerComponent().getModel("cust_INETUM_SOL_DM_0001");
+                const oProperties = oModel.getProperty("/cust_INETUM_SOL_DM_0001");
+                const index = oProperties.findIndex(item => item.externalCode === oContext.externalCode);
+                if (index > -1) {
+                    oProperties.splice(index, 1); 
+                }
+                oModel.refresh(true);
+            } catch (error) {
+                console.error("error:", error)
+            }finally{
+                oView.getView().getModel("busy").setProperty("/tableBusy", false);
             }
         }
 

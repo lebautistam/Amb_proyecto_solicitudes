@@ -5,15 +5,16 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "../service/service",
     "../model/formatter",
-    "../utils/creadorFormulario",
-    "../utils/Operaciones",
+    "com/amb/ambpendiapro/utils/creadorFormulario",
+    "com/amb/ambpendiapro/utils/Operaciones",
+    "com/amb/ambpendiapro/utils/utils",
     "sap/ui/core/routing/History"
 
-], (Controller, JSONModel, Filter, FilterOperator, Service, formatter, creadorFormulario, Operaciones, History) => {
+], (Controller, JSONModel, Filter, FilterOperator, Service, formatter, creadorFormulario, Operaciones, utils, History) => {
     "use strict";
 
     return Controller.extend("com.amb.ambpendiapro.controller.VisualizarSolicitud", {
-        onInit() {
+        onInit: function () {
             const oRouter = this.getOwnerComponent().getRouter();
             oRouter.getRoute("RouteVisualizacionSolicitud").attachPatternMatched(this._onObjectMatched, this);
         },
@@ -88,16 +89,27 @@ sap.ui.define([
         * @param {sap.ui.base.Event} oEvent El objeto del evento de la ruta.
         * @private
         */
-        _onObjectMatched: function (oEvent) {
-            const sExternalCode = oEvent.getParameter("arguments").externalCode;
-            const sEffectiveDate = oEvent.getParameter("arguments").effectiveStartDate;
-            const oRequestDetail = this._buscarSolicitudEnModeloDM(sExternalCode);
-            if (oRequestDetail) {
-                this._prepararModeloFiltrado(oRequestDetail);
+        _onObjectMatched: async function (oEvent) {
+            try {
+                const oGrupoModelos = this.getOwnerComponent().getModel("cust_INETUM_SOL_DM_0001");
+                if (!oGrupoModelos) {
+                    this.onNavBack();
+                    return;
+                }
+                utils.showBI(true);
+                const sExternalCode = oEvent.getParameter("arguments").externalCode;
+                const sEffectiveDate = oEvent.getParameter("arguments").effectiveStartDate;
+                const oRequestDetail = await this._buscarSolicitudEnModeloDM(sExternalCode);
+                if (oRequestDetail) {
+                    await this._prepararModeloFiltrado(oRequestDetail);
+                    const aCampos = oRequestDetail.cust_solFields?.results;
+                    await creadorFormulario.generarFormulario(this, "FormularioDinamico_visualizacion", aCampos);
+                }
+            } catch (error) {
+                console.error(error)
+            } finally {
+                utils.showBI(false);
             }
-
-            const aCampos = oRequestDetail.cust_solFields.results;
-            creadorFormulario.generarFormulario(this, "FormularioDinamico_visualizacion", aCampos);
         },
         /**
         * Se encarga de buscar la solicitud en el modelo por sus ids
@@ -107,10 +119,7 @@ sap.ui.define([
         */
         _buscarSolicitudEnModeloDM: function (sExternalCode) {
             const oGrupoModelos = this.getOwnerComponent().getModel("cust_INETUM_SOL_DM_0001");
-            if (!oGrupoModelos) {
-                this.onNavBack();
-            }
-            const oSolicitudes = oGrupoModelos.getProperty("/cust_INETUM_SOL_DM_0001");
+            const oSolicitudes = oGrupoModelos?.getProperty("/cust_INETUM_SOL_DM_0001");
             //Comentado porque no se logra obtener el objeto con las dos llaves externalCode y effectiveStartDate
             // const timestampAsNumber = parseInt(sEffectiveDate); 
 
@@ -121,7 +130,7 @@ sap.ui.define([
             // }
             // const oEffectiveDate = String(new Date(timestampAsNumber));
 
-            const oRequest = oSolicitudes.find(item => item.externalCode === sExternalCode);
+            const oRequest = oSolicitudes?.find(item => item.externalCode === sExternalCode);
             return oRequest;
         },
         /**

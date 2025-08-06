@@ -70,7 +70,7 @@ sap.ui.define([
         */
         _initializeAsyncData: async function () {
             try {
-                this.getView().getModel("busy").setProperty("/tableBusy", true);
+                this.getOwnerComponent().getModel("busy").setProperty("/tableBusy", true);
                 await this._getParametersApp();
                 await this._getMainDataEntity();
                 await this._getRowsTable();
@@ -90,7 +90,7 @@ sap.ui.define([
                 utils.onShowMessage(sMessage, "error", null, oParams)
                 console.log(oError)
             } finally {
-                this.getView().getModel("busy").setProperty("/tableBusy", false);
+                this.getOwnerComponent().getModel("busy").setProperty("/tableBusy", false);
             }
         },
         /**
@@ -141,13 +141,11 @@ sap.ui.define([
         onDetailRequest: function (oEvent) {
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001");
-
             this.getOwnerComponent().getRouter().navTo("RouteVisualizacionSolicitud", {
                 externalCode: oContext.getProperty("externalCode"),
                 effectiveStartDate: oContext.getProperty("effectiveStartDate").getTime(),
                 cust_object: oContext.cust_object
             });
-
         },
         /**
         * Manejador de la ruta.
@@ -251,14 +249,14 @@ sap.ui.define([
          */
         _requestBusy: function () {
             const oModelScf = this.getOwnerComponent().getModel();
-            const oLocalModel = this.getView().getModel("busy");
+            const oLocalModel = this.getOwnerComponent().getModel("busy");
             if (!oLocalModel) {
                 const oNewLocalModel = new JSONModel({
                     cellFilterOn: false,
                     globalFilter: "",
-                    tableBusy: false // Inicializa el estado de la tabla como no ocupado
+                    tableBusy: false
                 });
-                this.getView().setModel(oNewLocalModel, "busy");
+                this.getOwnerComponent().setModel(oNewLocalModel, "busy");
             } else {
                 oLocalModel.setProperty("/tableBusy", false); // Asegura que esté en false al inicio
             }
@@ -315,18 +313,19 @@ sap.ui.define([
                 bParam: true,
                 oParameter: {
                     "$expand": "cust_steps,cust_solFields",
-                    "$select": "cust_solFields,effectiveStartDate,externalCode,cust_solicitante,cust_fechaSol,cust_deadLine,cust_steps,cust_indexStep,cust_maxStep,cust_status,cust_object"
+                    "$select": "cust_nombreSol,cust_nombreTSol,cust_solFields,effectiveStartDate,externalCode,cust_solicitante,cust_fechaSol,cust_deadLine,cust_steps,cust_indexStep,cust_maxStep,cust_status,cust_object"
                 }
             };
             const oData = await service.readDataERP("/cust_INETUM_SOL_DM_0001", oModel, [], oParameters);
             const aEnrichedData = oData.data.results.map(element => {
+                console.log(element)
                 element.cust_nombreSolicitud = element?.cust_nombreSol || "Sin nombre";
                 element.cust_nombreTSolicitud = element?.cust_nombreTSol || "Sin nombre tipo";
                 return element;
             });
 
             const aFiltered = aEnrichedData.filter(element => {
-                return element.cust_steps.results.some(step => step.cust_aprobUser === sUserOnLine && step.cust_activeStep === true);
+                return element.cust_steps.results.some(step => step.cust_aprobUser === sUserOnLine && step.cust_activeStep === false);
             }).map(element => {
                 const sCustVto = Lenguaje.obtenerNombreConcatenado("cust_vto");
                 element.cust_vto = oViewModelC0000.oData[0][sCustVto];

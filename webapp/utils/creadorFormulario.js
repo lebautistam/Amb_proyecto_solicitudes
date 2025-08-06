@@ -9,11 +9,12 @@ sap.ui.define([
     "sap/m/UploadCollection",
     "sap/m/MessageToast",
     "sap/m/library",
-    "../utils/Lenguaje",
+    "./Lenguaje",
     "../service/service",
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
-], function (FormElement, Label, Input, DatePicker, TextArea, Select, Item, UploadCollection, MessageToast, ListMode, Lenguaje, service, Filter, FilterOperator) {
+    "./utils",
+], function (FormElement, Label, Input, DatePicker, TextArea, Select, Item, UploadCollection, MessageToast, ListMode, Lenguaje, service, Filter, FilterOperator, utils) {
     "use strict";
     /**
     * construye un objeto de adjunto para visualizar
@@ -45,14 +46,14 @@ sap.ui.define([
         //Para poder descargar el archivo (opcional)
         oItem.attachPress(function (oEvent) {
             oEvent.preventDefault();
-            const sDataURI = this.getUrl(); 
+            const sDataURI = this.getUrl();
             const sFileName = this.getFileName();
             // Crear un elemento <a> temporal en el DOM
             const a = document.createElement('a');
             a.href = sDataURI;
             a.download = sFileName;
             document.body.appendChild(a);
-            a.click(); 
+            a.click();
             document.body.removeChild(a);
         });
 
@@ -75,116 +76,97 @@ sap.ui.define([
      *   options?: [{ key, text }]
      * }
      */
-    function generarFormulario(oController, sContainerId, aCampos) {
+    async function generarFormulario(oController, sContainerId, aCampos) {
         const oView = oController.getView();
         const oFormContainer = oView.byId(sContainerId);
         const oModel = oController.getOwnerComponent().getModel();
         if (!oFormContainer) return;
         oFormContainer.destroyFormElements();
-        aCampos.forEach(async (campo) => {
-
-            const sLenguaje = Lenguaje.obtenerNombreConcatenado("cust_etiquetaInput");
-            const sLabel = sLenguaje;
-            console.log(sLabel)
-            const iLength = campo.cust_fieldLenght ? parseInt(campo.cust_fieldLenght, 10) : undefined;
-            // Mapeo propiedades de la api
-            let sTipoControl;
-            switch (String(campo.cust_fieldtype)) {
-                case "P": sTipoControl = "Select"; break;
-                case "F": sTipoControl = "DatePicker"; break;
-                case "I": sTipoControl = "Input"; break;
-                case "S": sTipoControl = "TextArea"; break;
-                case "A": sTipoControl = "Attachment"; break;
-                default: sTipoControl = "Input";
-            }
-            //Consultamos el valor de los campos Select
-            if (sTipoControl === "Select") {
-                const aFilter = [
-                    new Filter("optionId", FilterOperator.EQ, campo.cust_value)
-                ];
-                const oCustLabel = await service.readDataERP("/PicklistLabel", oModel, aFilter);
-                campo.cust_valueSelect = oCustLabel?.data?.results[0]?.label
-
-            }
-
-            const oFormElement = new FormElement({
-                label: new Label({ text: sLabel })
-            });
-
-            let oControl;
-
-            switch (sTipoControl) {
-
-                case "Select":
-                    //Se deja de tipo input ya que será de solo de lectura
-                    oControl = new Input({
-                        value: campo.cust_valueSelect,
-                    });
-                    break;
-
-                case "DatePicker":
-                    oControl = new DatePicker({
-                        value: campo.cust_value,
-                        displayFormat: "dd/MM/yyyy",
-                        valueFormat: "yyyy-MM-dd"
-                    });
-                    break;
-
-                case "Input":
-                    oControl = new Input({
-                        value: campo.cust_value,
-                        maxLength: iLength || 100
-                    });
-                    break;
-
-                case "TextArea":
-                    oControl = new TextArea({
-                        value: campo.cust_value,
-                        rows: 3
-                    });
-                    break;
-
-
-                case "Attachment":
-                    oControl = new UploadCollection({
-                        mode: sap.m.ListMode.SingleSelectMaster,
-                        multiple: false,
-                        uploadEnabled: false,      // Deshabilita el botón de carga
-                        terminationEnabled: false,
-                        instantUpload: false,
-                        showSeparators: "All",
-                        // Función que se dispara cuando se adjunta un archivo
-                        change: oController.onDetectorAdjunto.bind(oController)
-                    });
-                    break;
-            }
-            //Adición de identificador al campo
-            oControl.data("fieldName", campo.externalCode);
-
-            // oControl.setEditable(false);
-            //Controles de editable y mandatorio según los campos y cust_mandatory
-            if (sTipoControl !== "Attachment") {
-                oControl.setEditable(false);
-            } else {
-                oControl.setUploadEnabled(false);
-                const aFilter = [
-                    new Filter("attachmentId", FilterOperator.EQ, campo.cust_value)
-                ];
-                service.readDataERP("/Attachment", oModel, aFilter)
-                    .then(data => {
-                        if (data.data.results.length) {
-                            const oItem = this._viewAttachment(data.data.results[0]);
+        console.log(aCampos)
+        for (const campo of aCampos) {
+            try {
+                const sLenguaje = Lenguaje.obtenerNombreConcatenado("cust_etiquetaInput");
+                const sLabel = sLenguaje;
+                const iLength = campo.cust_fieldLenght ? parseInt(campo.cust_fieldLenght, 10) : undefined;
+    
+                // Mapeo de propiedades de la API
+                let sTipoControl;
+                switch (String(campo.cust_fieldtype)) {
+                    case "P": sTipoControl = "Select"; break;
+                    case "F": sTipoControl = "DatePicker"; break;
+                    case "I": sTipoControl = "Input"; break;
+                    case "S": sTipoControl = "TextArea"; break;
+                    case "A": sTipoControl = "Attachment"; break;
+                    default: sTipoControl = "Input";
+                }
+    
+                const oFormElement = new FormElement({
+                    label: new Label({ text: sLabel })
+                });
+    
+                let oControl;
+    
+                // Creamos el control basado en el tipo
+                switch (sTipoControl) {
+                    case "Select":
+                        // 1. ESPERAMOS por el valor del backend
+                        const oCustLabel = await service.readDataERP("/PicklistLabel", oModel, [new Filter("optionId", "EQ", campo.cust_value)]);
+                        const sSelectValue = oCustLabel?.data?.results[0]?.label || ""; // Valor por defecto
+    
+                        oControl = new Input({
+                            value: sSelectValue,
+                            editable: false
+                        });
+                        break;
+                    case "DatePicker":
+                        oControl = new DatePicker({
+                            value: campo.cust_value,
+                            displayFormat: "dd/MM/yyyy",
+                            valueFormat: "yyyy-MM-dd",
+                            editable: false
+                        });
+                        break;
+                    case "Input":
+                        oControl = new Input({
+                            value: campo.cust_value,
+                            maxLength: iLength || 100,
+                            editable: false
+                        });
+                        break;
+                    case "Attachment":
+                        oControl = new UploadCollection({
+                            mode: sap.m.ListMode.SingleSelectMaster,
+                            multiple: false,
+                            uploadEnabled: false,
+                            terminationEnabled: false
+                        });
+    
+                        // 2. También usamos await aquí para consistencia
+                        const oAdjuntoData = await service.readDataERP("/Attachment", oModel, [new Filter("attachmentId", "EQ", campo.cust_value)]);
+                        if (oAdjuntoData.data.results.length) {
+                            const oItem = this._viewAttachment(oAdjuntoData.data.results[0]); // Asumo que _viewAttachment existe en oController
                             oControl.addItem(oItem);
                         }
-                    })
-                    .catch(error => {
-                        console.error("Error: ", error.message);
-                    });
+                        break;
+                    default:
+                         oControl = new Input({
+                            value: campo.cust_value,
+                            maxLength: iLength || 100,
+                            editable: false
+                        });
+                }
+    
+                if (oControl) {
+                    oControl.data("fieldName", campo.externalCode);
+                    oFormElement.addField(oControl);
+                    oFormContainer.addFormElement(oFormElement);
+                }
+    
+            } catch (error) {
+                console.error("Error al generar el campo dinámico:", campo.externalCode, error);
+                // Puedes decidir si continuar con el siguiente campo o detenerte
             }
-
-            oFormElement.addField(oControl);
-            oFormContainer.addFormElement(oFormElement);
-        });
+        }
     }
     /**
     * crea la cadena url para descargar o visualizar el adjunto

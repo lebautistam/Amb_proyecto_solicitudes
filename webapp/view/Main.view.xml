@@ -83,7 +83,7 @@
                                 <m:ToolbarSpacer id="_IDGenToolbarSpacer1" />
                                 <m:Title
                                     id="counterTitle"
-                                    text="{= ${view>/filteredCount} + ' ' + (${view>/filteredCount} > 1 ? ${i18n>requests} : ${i18n>request}) }"
+                                    text="{= ${view>/filteredCount} + ' ' + (${view>/filteredCount} === 1 ? ${i18n>request} : ${i18n>requests}) }"
                                     titleStyle="H5"
                                 />
                             </m:OverflowToolbar>

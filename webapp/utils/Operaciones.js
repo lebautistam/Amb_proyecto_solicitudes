@@ -36,6 +36,7 @@ sap.ui.define([
                     if (form) {
                         utils.showBI(true);
                     }
+                    oView.getOwnerComponent().getModel("busy").setProperty("/tableBusy", true);
                     let cust_activeStep = '';
                     let oFechaActual = new Date();
                     let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
@@ -46,16 +47,16 @@ sap.ui.define([
                     const sGroupId = "updateStepsBatch";
                     oModelApi.setDeferredGroups([sGroupId]);
 
-                    if (oContext.cust_indexStep <= oContext.cust_maxStep) {
+                    if (parseInt(oContext.cust_indexStep) <= parseInt(oContext.cust_maxStep)) {
                         bStep = true;
-                    } else if (oContext.cust_indexStep > oContext.cust_maxStep) {
+                    } else if (parseInt(oContext.cust_indexStep) > parseInt(oContext.cust_maxStep)) {
                         bStep = false;
                     }
                     oContext.cust_steps.results.forEach(element => {
                         if (bStep) {
-                            if ((element.cust_seqStep == oContext.cust_indexStep)) {
+                            if (parseInt(element.cust_seqStep) == parseInt(oContext.cust_indexStep)) {
                                 cust_activeStep = false;
-                            } else if (element.cust_seqStep == (oContext.cust_indexStep + 1)) {
+                            } else if (parseInt(element.cust_seqStep) == (parseInt(oContext.cust_indexStep) + 1)) {
                                 cust_activeStep = true;
                             }
                         } else {
@@ -73,7 +74,7 @@ sap.ui.define([
                         }
                     });
                     oPayloadPrincipal = {
-                        cust_indexStep: (bStep ? (oContext.cust_indexStep + 1) : 0),
+                        cust_indexStep: (bStep ? (parseInt(oContext.cust_indexStep) + 1) : 0),
                         cust_fechaAct: sFechaFormatoOData,
                         ...(!bStep && { cust_status: 'CO' })
                     };
@@ -94,9 +95,9 @@ sap.ui.define([
                                     oView.onNavBack()
                                 }, 2000);
                             };
-                            if (!form) {
-                                oView._getMainDataEntity();
-                            }
+                            setTimeout(() => {
+                                utils._deleteProcessedRequest(oContext, oView);
+                            }, 2000);
                         },
                         error: oError => {
                             MessageBox.error("Ocurrió un error durante la actualización en lote.");
@@ -130,6 +131,7 @@ sap.ui.define([
                     if (form) {
                         utils.showBI(true);
                     }
+                    oView.getOwnerComponent().getModel("busy").setProperty("/tableBusy", true);
                     let cust_activeStep = false;
                     let oKeyDM0002;
                     let oKeyDM0001;
@@ -138,6 +140,7 @@ sap.ui.define([
                     oModelApi.setDeferredGroups([sGroupId]);
 
                     oContext.cust_steps.results.forEach(element => {
+                        debugger;
                         oKeyDM0002 = oModelApi.createKey('/cust_INETUM_SOL_DM_0002', {
                             cust_INETUM_SOL_DM_0001_effectiveStartDate: element.cust_INETUM_SOL_DM_0001_effectiveStartDate,
                             cust_INETUM_SOL_DM_0001_externalCode: element.cust_INETUM_SOL_DM_0001_externalCode,
@@ -147,6 +150,7 @@ sap.ui.define([
                             groupId: sGroupId
                         });
                     });
+                    debugger;
                     oPayloadPrincipal = {
                         cust_indexStep: 0,
                         // cust_fechaAct: sFechaFormatoOData,
@@ -169,9 +173,9 @@ sap.ui.define([
                                     oView.onNavBack()
                                 }, 2000);
                             };
-                            if (!form) {
-                                oView._getMainDataEntity();
-                            }
+                            setTimeout(() => {
+                                utils._deleteProcessedRequest(oContext, oView);
+                            }, 2000);
                         },
                         error: oError => {
                             MessageBox.error("Ocurrió un error durante la actualización en lote.");
@@ -204,6 +208,7 @@ sap.ui.define([
                     if (form) {
                         utils.showBI(true);
                     }
+                    oView.getOwnerComponent().getModel("busy").setProperty("/tableBusy", true);
                     let cust_activeStep = '';
                     let oFechaActual = new Date();
                     let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
@@ -214,9 +219,9 @@ sap.ui.define([
                     oModelApi.setDeferredGroups([sGroupId]);
 
                     oContext.cust_steps.results.forEach(element => {
-                        if ((element.cust_seqStep == oContext.cust_indexStep)) {
+                        if (parseInt(element.cust_seqStep) == parseInt(oContext.cust_indexStep)) {
                             cust_activeStep = false;
-                        } else if (element.cust_seqStep == (oContext.cust_indexStep - 1)) {
+                        } else if (parseInt(element.cust_seqStep) == (parseInt(oContext.cust_indexStep) - 1)) {
                             cust_activeStep = true;
                         }
                         if (typeof cust_activeStep === "boolean") {
@@ -231,7 +236,7 @@ sap.ui.define([
                         }
                     });
                     oPayloadPrincipal = {
-                        cust_indexStep: (oContext.cust_indexStep - 1),
+                        cust_indexStep: (parseInt(oContext.cust_indexStep) - 1),
                         cust_fechaAct: sFechaFormatoOData
                     };
                     oKeyDM0001 = oModelApi.createKey('/cust_INETUM_SOL_DM_0001', {
@@ -251,9 +256,9 @@ sap.ui.define([
                                     oView.onNavBack()
                                 }, 2000);
                             };
-                            if (!form) {
-                                oView._getMainDataEntity();
-                            }
+                            setTimeout(() => {
+                                utils._deleteProcessedRequest(oContext, oView);
+                            }, 2000);
                         },
                         error: oError => {
                             MessageBox.error("Ocurrió un error durante la actualización en lote.");
@@ -287,7 +292,7 @@ sap.ui.define([
                     if (form) {
                         utils.showBI(true);
                     }
-                    let cust_activeStep = '';
+                    oView.getOwnerComponent().getModel("busy").setProperty("/tableBusy", true);
                     let oFechaActual = new Date();
                     let sFechaFormatoOData = `/Date(${oFechaActual.getTime()})/`;
                     let oKeyDM0002;
@@ -295,11 +300,12 @@ sap.ui.define([
                     let oPayloadPrincipal = {};
                     const sGroupId = "updateStepsBatchBack";
                     oModelApi.setDeferredGroups([sGroupId]);
-
+                    
                     oContext.cust_steps.results.forEach(element => {
-                        if ((element.cust_seqStep == oContext.cust_indexStep)) {
+                        let cust_activeStep = null;
+                        if (parseInt(element.cust_seqStep) == parseInt(oContext.cust_indexStep)) {
                             cust_activeStep = false;
-                        } else if (element.cust_seqStep == 1) {
+                        } else if (parseInt(element.cust_seqStep) == 1) {
                             cust_activeStep = true;
                         }
                         if (typeof cust_activeStep === "boolean") {
@@ -335,9 +341,9 @@ sap.ui.define([
                                     oView.onNavBack()
                                 }, 2000);
                             };
-                            if (!form) {
-                                oView._getMainDataEntity();
-                            }
+                            setTimeout(() => {
+                                utils._deleteProcessedRequest(oContext, oView);
+                            }, 2000);
                         },
                         error: oError => {
                             MessageBox.error("Ocurrió un error durante la actualización en lote.");
