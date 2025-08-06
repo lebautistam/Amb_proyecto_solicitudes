@@ -30,3 +30,10 @@ server:
       configuration:
         flp:
           theme: sap_horizon
+    - name: ui5-middleware-servestatic
+      afterMiddleware: compression
+      mountPath: /user-api 
+      configuration:
+        # El path de la URL que queremos interceptar
+        # La carpeta local que contiene los archivos a servir
+        rootPath: ./webapp/localService/mockdata

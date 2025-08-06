@@ -42,19 +42,17 @@ sap.ui.define([
             visibleEdit: false,
             visibleDelete: false
         });
+        //Para poder descargar el archivo (opcional)
         oItem.attachPress(function (oEvent) {
-            // console.log(this.getUrl())
-            // sap.m.URLHelper.redirect(this.getUrl(), true);
             oEvent.preventDefault();
-
-            const sDataURI = this.getUrl(); // Obtiene la Data URI del item
-            const sFileName = this.getFileName(); // Obtiene el nombre de archivo del item
+            const sDataURI = this.getUrl(); 
+            const sFileName = this.getFileName();
             // Crear un elemento <a> temporal en el DOM
             const a = document.createElement('a');
             a.href = sDataURI;
-            a.download = sFileName; // Esto le dice al navegador que lo descargue con este nombre
-            document.body.appendChild(a); // Añadirlo al DOM (necesario para Firefox)
-            a.click(); // Simular un clic
+            a.download = sFileName;
+            document.body.appendChild(a);
+            a.click(); 
             document.body.removeChild(a);
         });
 
@@ -199,99 +197,8 @@ sap.ui.define([
         return `data:${sMimeType};base64,${sBase64Content}`;
     }
 
-    function obtenerDatosFormulario(oView, sContainerId, aCampos) {
-        const oFormContainer = oView.byId(sContainerId);
-        if (!oFormContainer) return {};
-
-        const resultado = {};
-
-        aCampos.forEach(campo => {
-            const control = encontrarControlPorCampo(oFormContainer, campo.externalCode);
-            if (!control) return;
-
-            let valor;
-            switch (campo.cust_fieldType) {
-                case "P": valor = control.getSelectedKey(); break;
-                case "A": break;
-                default: valor = control.getValue(); break;
-            }
-
-            resultado[campo.externalCode] = valor;
-        });
-
-        return resultado;
-    }
-
-    function encontrarControlPorCampo(oFormContainer, fieldName) {
-        const aFormElements = oFormContainer.getFormElements();
-        for (let fe of aFormElements) {
-            for (let control of fe.getFields()) {
-                if (control.data("fieldName") === fieldName) {
-                    return control;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-   * Valida que los campos obligatorios de un formulario dinámico no estén vacíos.
-   * @param {sap.ui.core.mvc.View} oView La vista actual.
-   * @param {String} sContainerId El ID del contenedor del formulario.
-   * @param {Array} aCampos El array con las definiciones de los campos.
-   * @param {sap.ui.core.mvc.Controller} oController El contexto del controlador para casos especiales (adjuntos).
-   * @returns {Boolean} 'true' si el formulario es válido, 'false' si no.
-   */
-    function validarFormulario(oView, sContainerId, aCampos, oController) {
-        let bFormularioValido = true;
-        const oFormContainer = oView.byId(sContainerId);
-
-        aCampos.forEach(campo => {
-            const control = encontrarControlPorCampo(oFormContainer, campo.externalCode);
-            if (control) {
-                control.setValueState(sap.ui.core.ValueState.None);
-            }
-
-            if (!!campo.cust_mandatory) {
-                let bCampoValido = false;
-
-                if (campo.cust_fieldType === "A") {
-                    if (oController._contenidoArchivo) {
-                        bCampoValido = true;
-                    }
-                } else {
-                    if (control) {
-                        let valor;
-                        switch (campo.cust_fieldType) {
-                            case "P": // Select
-                                valor = control.getSelectedKey();
-                                break;
-                            default: // Input, DatePicker, TextArea
-                                valor = control.getValue();
-                                break;
-                        }
-                        if (valor) {
-                            bCampoValido = true;
-                        }
-                    }
-                }
-
-                if (!bCampoValido) {
-                    bFormularioValido = false;
-                    if (control) {
-                        control.setValueState(sap.ui.core.ValueState.Error);
-                    }
-                }
-            }
-        });
-
-        return bFormularioValido;
-    }
-
     return {
         generarFormulario: generarFormulario,
-        obtenerDatosFormulario: obtenerDatosFormulario,
-        validarFormulario: validarFormulario,
         _viewAttachment: _viewAttachment,
         _crearDataURI: _crearDataURI
     };

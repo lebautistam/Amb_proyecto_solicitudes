@@ -3,82 +3,149 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:f="sap.ui.layout.form"
-    xmlns:core="sap.ui.core">
-
-    <Page id="pageVisualizar" title="{modelTitle>/title}">
+    xmlns:core="sap.ui.core"
+>
+    <Page
+        id="pageVisualizar"
+        title="{modelTitle>/title}"
+    >
         <customHeader>
             <Toolbar id="_IDGenToolbar2">
-                <core:Icon id="_IDGenIcon" src="sap-icon://pending" size="1.5rem" class="sapUiNoMarginEnd"/>
-                <Title id="_IDGenTitle" text="{modelTitle>/title}" level="H2" class="sapUiTinyMarginBegin"/>
+                <core:Icon
+                    id="_IDGenIcon"
+                    src="sap-icon://pending"
+                    size="1.5rem"
+                    class="sapUiNoMarginEnd"
+                />
+                <Title
+                    id="_IDGenTitle"
+                    text="{modelTitle>/title}"
+                    level="H2"
+                    class="sapUiTinyMarginBegin"
+                />
             </Toolbar>
         </customHeader>
-        <ScrollContainer id="scroll" height="100%" vertical="true" >
-            <VBox id="formContainer" class="sapUiSmallMargin" expandable="true"
-                            expanded="true"
->
-                <f:Form id="FormToolbar" editable="true" ariaLabelledBy="Title1">
-                    <f:toolbar>
-                        <Toolbar id="_IDGenToolbar1">
-                            <Title id="Title1" 
-                                   text="{filteredModelDM_0001>/request/cust_nombreSolicitud}" 
-                                   class="sapUiTinyMarginBegin"/>
-                            <ToolbarSpacer id="_IDGenToolbarSpacer" />
-                        </Toolbar>
-                    </f:toolbar>
+        <ScrollContainer
+            id="scroll"
+            height="100%"
+            vertical="true"
+            class="sapUiSmallMargin"
+        >
+            <f:Form
+                id="FormToolbar"
+                editable="true"
+                ariaLabelledBy="Title1"
+            >
+                <f:toolbar>
+                    <Toolbar id="_IDGenToolbar1">
+                        <Title
+                            id="Title1"
+                            text="{filteredModelDM_0001>/request/cust_nombreSolicitud}"
+                            class="sapUiTinyMarginBegin"
+                        />
+                        <ToolbarSpacer id="_IDGenToolbarSpacer" />
+                    </Toolbar>
+                </f:toolbar>
 
-                    <f:layout>
-                        <f:ResponsiveGridLayout
-                            id="_IDGenResponsiveGridLayout"
-                            labelSpanXL="4"
-                            labelSpanL="3"
-                            labelSpanM="4"
-                            labelSpanS="12"
-                            adjustLabelSpan="false"
-                            emptySpanXL="4"
-                            emptySpanL="4"
-                            emptySpanM="2"
-                            emptySpanS="0"
-                            columnsXL="1"
-                            columnsL="1"
-                            columnsM="1"
-                            singleContainerFullSize="false" />
-                    </f:layout>
+                <f:layout>
+                    <f:ResponsiveGridLayout
+                        id="_IDGenResponsiveGridLayout"
+                        labelSpanXL="4"
+                        labelSpanL="3"
+                        labelSpanM="4"
+                        labelSpanS="12"
+                        adjustLabelSpan="false"
+                        emptySpanXL="4"
+                        emptySpanL="4"
+                        emptySpanM="2"
+                        emptySpanS="0"
+                        columnsXL="1"
+                        columnsL="1"
+                        columnsM="1"
+                        singleContainerFullSize="false"
+                    />
+                </f:layout>
 
-                    <f:FormContainer id="FormularioDinamico_visualizacion" ariaLabelledBy="Title1" />
-                </f:Form>
-            </VBox>
+                <f:FormContainer
+                    id="FormularioDinamico_visualizacion"
+                    ariaLabelledBy="Title1"
+                />
+            </f:Form>
         </ScrollContainer>
 
         <footer>
             <OverflowToolbar id="_IDGenOverflowToolbar">
                 <ToolbarSpacer id="_IDGenToolbarSpacer2" />
-                <Button id="_IDGenButton" class="sapUiNoMarginEnd sapUiResponsivePadding" text="Devolver" type="Ghost" press="onBack" >
+                <Button
+                    id="_IDGenButton"
+                    class="sapUiNoMarginEnd sapUiResponsivePadding"
+                    text="Devolver"
+                    type="Ghost"
+                    press="onBack"
+                >
                     <layoutData>
-                        <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData" priority="Low"/>
+                        <OverflowToolbarLayoutData
+                            id="_IDGenOverflowToolbarLayoutData"
+                            priority="Low"
+                        />
                     </layoutData>
                 </Button>
-                <Button id="_IDGenButton1" class="sapUiNoMarginEnd sapUiResponsivePadding" text="Aprobar" type="Ghost" press="onApprove" >
+                <Button
+                    id="_IDGenButton1"
+                    class="sapUiNoMarginEnd sapUiResponsivePadding"
+                    text="Aprobar"
+                    type="Ghost"
+                    press="onApprove"
+                >
                     <layoutData>
-                        <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData1" priority="High"/>
+                        <OverflowToolbarLayoutData
+                            id="_IDGenOverflowToolbarLayoutData1"
+                            priority="High"
+                        />
                     </layoutData>
                 </Button>
-                <Button id="_IDGenButton2" class="sapUiNoMarginEnd sapUiResponsivePadding" text="Rechazar" type="Ghost" press="onReject" >
+                <Button
+                    id="_IDGenButton2"
+                    class="sapUiNoMarginEnd sapUiResponsivePadding"
+                    text="Rechazar"
+                    type="Ghost"
+                    press="onReject"
+                >
                     <layoutData>
-                        <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData2" priority="High"/>
+                        <OverflowToolbarLayoutData
+                            id="_IDGenOverflowToolbarLayoutData2"
+                            priority="High"
+                        />
                     </layoutData>
                 </Button>
-                <Button id="_IDGenButton3" class="sapUiNoMarginEnd sapUiResponsivePadding" text="Retroceder" type="Ghost" press="onReturn" >
+                <Button
+                    id="_IDGenButton3"
+                    class="sapUiNoMarginEnd sapUiResponsivePadding"
+                    text="Retroceder"
+                    type="Ghost"
+                    press="onReturn"
+                >
                     <layoutData>
-                        <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData3" priority="Low"/>
+                        <OverflowToolbarLayoutData
+                            id="_IDGenOverflowToolbarLayoutData3"
+                            priority="Low"
+                        />
                     </layoutData>
                 </Button>
-                <Button id="_IDGenButton4" class="sapUiResponsiveContentPadding sapUiNoMarginEnd" text="Cancelar" press="onCancel" >
+                <Button
+                    id="_IDGenButton4"
+                    class="sapUiResponsiveContentPadding sapUiNoMarginEnd"
+                    text="Cancelar"
+                    press="onCancel"
+                >
                     <layoutData>
-                        <OverflowToolbarLayoutData id="_IDGenOverflowToolbarLayoutData4" priority="High"/>
+                        <OverflowToolbarLayoutData
+                            id="_IDGenOverflowToolbarLayoutData4"
+                            priority="High"
+                        />
                     </layoutData>
                 </Button>
             </OverflowToolbar>
         </footer>
     </Page>
-
 </mvc:View>

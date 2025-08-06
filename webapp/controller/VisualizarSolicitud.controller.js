@@ -23,7 +23,6 @@ sap.ui.define([
         * @public
         */
         onApprove: function (oEvent) {
-            console.log(oEvent)
             const oModelFiltered = this.getOwnerComponent().getModel("filteredModelDM_0001");
             const oRequest = oModelFiltered.getProperty("/request");
             Operaciones.actionApprove(oRequest, this, true);
@@ -98,7 +97,6 @@ sap.ui.define([
             }
 
             const aCampos = oRequestDetail.cust_solFields.results;
-            console.log(aCampos)
             creadorFormulario.generarFormulario(this, "FormularioDinamico_visualizacion", aCampos);
         },
         /**
@@ -113,8 +111,8 @@ sap.ui.define([
                 this.onNavBack();
             }
             const oSolicitudes = oGrupoModelos.getProperty("/cust_INETUM_SOL_DM_0001");
-
-            // const timestampAsNumber = parseInt(sEffectiveDate); // Opción 1: parseInt (recomendado por claridad y seguridad)
+            //Comentado porque no se logra obtener el objeto con las dos llaves externalCode y effectiveStartDate
+            // const timestampAsNumber = parseInt(sEffectiveDate); 
 
             // if (isNaN(timestampAsNumber)) { // Verificar si la conversión fue exitosa
             //     console.error("El timestamp de la URL no es un número válido:", sEffectiveDate);

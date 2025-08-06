@@ -4,7 +4,9 @@
     xmlns="sap.ui.table"
     xmlns:m="sap.m"
     xmlns:core="sap.ui.core"
+    xmlns:rm="sap.ui.table.rowmodes"
     class="sapUiSizeCompact"
+    height="100%"
 >
     <m:Page
         id="page"
@@ -25,17 +27,15 @@
                 />
             </m:Toolbar>
         </m:customHeader>
-        
+
         <m:content>
-            <!-- <m:FlexBox
-                id="flexboxContainer"
-                width="100%"
-                justifyContent="Center"
-                class="sapUiSmallMarginTopBottom"
-            > -->
-                <m:Panel
-                    id="_IDGenPanel"
-                    class="sapUiMediumMarginBottom"
+            <m:Panel
+                id="_IDGenPanel"
+                class="sapUiMediumMarginBottom"
+            >
+                <m:VBox
+                    id="_IDGenVBox1"
+                    fitContainer="true"
                 >
                     <Table
                         id="requestsTable"
@@ -47,16 +47,20 @@
                         }"
                         class="sapUiResponsiveMargin"
                         enableCellFilter="true"
-                        filter="filterGlobally"
+                        filter="onColumnFilter"
                         width="auto"
                         selectionMode="None"
                         busy="{busy>/tableBusy}"
                         busyIndicatorDelay="0"
                         busyIndicatorSize="Medium"
-                        visibleRowCountMode="Auto" 
-                        minAutoRowCount="15"
-                        visibleRowCount="15"
                     >
+                        <rowMode>
+                            <rm:Interactive
+                                id="_IDGenInteractive"
+                                rowCount="15"
+                                minRowCount="5"
+                            />
+                        </rowMode>
                         <extension>
                             <m:OverflowToolbar
                                 id="_IDGenOverflowToolbar1"
@@ -66,14 +70,15 @@
                                     id="_IDGenSearchField"
                                     placeholder="{i18n>search}"
                                     value="{modeloLocal>/globalFilter}"
-                                    search="filterGlobally"
+                                    liveChange="onGlobalFilter"
                                     width="15rem"
+                                    class="customSearchField"
                                 />
                                 <m:Button
                                     id="_IDGenButton5"
                                     icon="sap-icon://decline"
                                     tooltip="{i18n>clearAllSortingsFilters}"
-                                    press="clearAllSortingsFilters"
+                                    press="onClearAllFilters"
                                 />
                                 <m:ToolbarSpacer id="_IDGenToolbarSpacer1" />
                                 <m:Title
@@ -151,8 +156,6 @@
                                 id="colFecha"
                                 hAlign="Center"
                                 width="15%"
-                                filterProperty="cust_fechaSol"
-                                filterType="sap.ui.model.odata.type.Date"
                                 sortProperty="cust_fechaSol"
                                 autoResizable="true"
                             >
@@ -166,7 +169,7 @@
                                         id="_IDGenText3"
                                         text="{
                                         path: 'cust_INETUM_SOL_DM_0001>cust_fechaSol',
-                                        type: 'sap.ui.model.odata.type.Date',
+                                        type: 'sap.ui.model.odata.type.DateTime',
                                         formatOptions: { style: 'long', pattern: 'dd/MM/yyyy' }}"
                                         wrapping="false"
                                     />
@@ -204,7 +207,7 @@
                             <Column
                                 id="colAcciones"
                                 hAlign="Center"
-                                width="30%"
+                                width="15rem"
                                 autoResizable="true"
                             >
                                 <m:Label
@@ -266,8 +269,8 @@
                             </Column>
                         </columns>
                     </Table>
-                </m:Panel>
-            <!-- </m:FlexBox> -->
+                </m:VBox>
+            </m:Panel>
         </m:content>
     </m:Page>
 </mvc:View>

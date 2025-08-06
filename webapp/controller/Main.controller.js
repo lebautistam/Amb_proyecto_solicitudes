@@ -22,62 +22,45 @@ sap.ui.define([
         onInit() {
             this._managementRouter();
             this._requestBusy();
+            this._getUserOnLine();
             this._initializeAsyncData();
-            $.ajax({
-                url: sap.ui.require.toUrl("com/amb/ambpendiapro") + "/user-api/currentUser",
-                method: "GET",
-                async: true,
-                success: function (data) {
-                    console.log("Información del usuario:", data);
-                    var oViewUserModel = new JSONModel([{
-                        "displayName": data.displayName,
-                        "email": data.email,
-                        "firstname": data.firstname,
-                        "lastname": data.lastname,
-                        "name": data.name
-                    }]);
-
-                    // if (urlParameters && urlParameters.length > 1) {
-                    //     if (urlParameters[1] && urlParameters[1].includes("user")) {
-                    //         let usuarioLogueado = urlParameters[1].split("user=")[1];
-                    //         if (usuarioLogueado) {
-                    //             usuarioLogueado = usuarioLogueado.includes("#") ? usuarioLogueado.replace(/#/g, "") : usuarioLogueado;
-                    //         }
-                    //         oViewUserModel.setProperty("/0/name", usuarioLogueado);
-                    //     }
-                    // }
-                    // that.getView().setModel(oViewUserModel, "oModelUser");
-                    // sap.ui.getCore().setModel(oViewUserModel, "oModelUser");
-                    // sessionStorage.setItem("displayName", oViewUserModel.getProperty("/0/name"));
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.log(errorThrown, textStatus, jqXHR)
-                    let oViewUserModel = new JSONModel([{
-                        // "displayName": VKH3V6U 'CARRETO',AGUILARJ DL0O9N5 SVALLEJ A611CM9 SBOUSSO SPITARC DGLBZ4X U5JXA37 SQK4USQ MENA
-                        "displayName": '',
-                        "email": '',
-                        "firstname": '',
-                        "lastname": '',
-                        "name": ''
-                    }]);
-                    //Para probar en local quitar el return,caida puntual y el msg si no queremos que aparezca
-                    /* sap.m.MessageBox.error(i18n.getProperty("msgCaidaPuntual"));
-                                      caidaPuntual=true;
-                                      return; */
-                    // if (urlParameters && urlParameters.length > 1) {
-                    //     if (urlParameters[1] && urlParameters[1].includes("user")) {
-                    //         let usuarioLogueado = urlParameters[1].split("user=")[1];
-                    //         if (usuarioLogueado) {
-                    //             usuarioLogueado = usuarioLogueado.includes("#") ? usuarioLogueado.replace(/#/g, "") : usuarioLogueado;
-                    //         }
-                    //         oViewUserModel.setProperty("/0/name", usuarioLogueado);
-                    //     }
-                    // }
-                    // that.getView().setModel(oViewUserModel, "oModelUser");
-                    // sap.ui.getCore().setModel(oViewUserModel, "oModelUser");
-                    // sessionStorage.setItem("displayName", oViewUserModel.getProperty("/0/name"));
+        },
+        /**
+         Obtiene los datos del usuario actual desde el endpoint "/user-api/currentUser".
+        * Esta función maneja tanto el ambiente de desarrollo local (usando datos simulados con la extensión .json)
+        * como el de producción (sin la extensión .json). Los datos del usuario obtenidos
+        * se establecen como un modelo JSON en la vista y se almacenan en el "session storage".
+        * @returns {Promise<void>} - Una promesa que se resuelve cuando los datos del usuario han sido cargados y establecidos exitosamente.
+        * @throws {Error} Si la obtención de datos falla o la respuesta no es válida, se crea un registro de error y se muestra un cuadro de mensaje de error al usuario.
+        */
+        _getUserOnLine: async function () {
+            try {
+                const oResponse = await fetch(`${sap.ui.require.toUrl("com/amb/ambpendiapro")}/user-api/currentUser.json`);
+                const oUserData = await oResponse.json();
+                var oViewUserModel = new JSONModel([{
+                    "displayName": oUserData.displayName,
+                    "email": oUserData.email,
+                    "firstname": oUserData.firstname,
+                    "lastname": oUserData.lastname,
+                    "name": oUserData.name
+                }]);
+                this.getView().setModel(oViewUserModel, "oModelUser");
+                // sap.ui.getCore().setModel(oViewUserModel, "oModelUser");
+                sessionStorage.setItem("userName", oViewUserModel.getProperty("/0/name"))
+            } catch (oError) {
+                const oResourceBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+                const sLogMessage = oResourceBundle.getText("errorUserLog");
+                const sUserMessage = oResourceBundle.getText("errorUserDataMessage");
+                const sTitle = oResourceBundle.getText("errorLoadDataTitle");
+                const sDetails = oResourceBundle.getText("errorLoadDataDetails");
+                Log.error(sLogMessage, JSON.stringify(oError, null, 2), this.getMetadata().getName());
+                const oParams = {
+                    title: sTitle,
+                    details: sDetails,
+                    actions: [MessageBox.Action.CLOSE]
                 }
-            });
+                utils.onShowMessage(sUserMessage, "error", null, oParams)
+            }
         },
         /**
         * Realiza el cargue de la información principal de manera asyncrona,
@@ -92,64 +75,22 @@ sap.ui.define([
                 await this._getMainDataEntity();
                 await this._getRowsTable();
             } catch (oError) {
-                Log.error("Fallo al inicializar los datos de la vista principal", JSON.stringify(oError, null, 2), this.getMetadata().getName());
+                const oResourceBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
+
+                const sLogMessage = oResourceBundle.getText("logErrorInitializeData");
+                const sTitle = oResourceBundle.getText("errorLoadDataTitle");
+                const sMessage = oResourceBundle.getText("errorLoadDataMessage");
+                const sDetails = oResourceBundle.getText("errorLoadDataDetails");
+                Log.error(sLogMessage, JSON.stringify(oError, null, 2), this.getMetadata().getName());
                 const oParams = {
-                    title: "Error de Carga",
-                    details: "Por favor, intente refrescar la página. Si el problema persiste, contacte al soporte técnico.",
+                    title: sTitle,
+                    details: sDetails,
                     actions: [MessageBox.Action.CLOSE]
                 }
-                utils.onShowMessage("Hubo un error al cargar los datos", "error", null, oParams)
+                utils.onShowMessage(sMessage, "error", null, oParams)
                 console.log(oError)
             } finally {
                 this.getView().getModel("busy").setProperty("/tableBusy", false);
-            }
-        },
-        _loadUserInfo: function () {
-            // Comprueba si el servicio UserInfo está disponible
-            if (sap.ushell && sap.ushell.Container && sap.ushell.Container.getService) {
-                sap.ushell.Container.getServiceAsync("UserInfo")
-                    .then(function (oUserInfo) {
-                        // Información básica del usuario
-                        const sId = oUserInfo.getId(); // ID del usuario (ej. 'JOHN.DOE')
-                        const sEmail = oUserInfo.getEmail(); // Correo electrónico
-                        const sFirstName = oUserInfo.getFirstName(); // Nombre
-                        const sLastName = oUserInfo.getLastName(); // Apellido
-                        const sFullName = oUserInfo.getFullName(); // Nombre completo
-                        const sLanguage = oUserInfo.getLanguage(); // Idioma del usuario (configurado en el perfil)
-
-                        console.log("Usuario Conectado (UserInfo Service):");
-                        console.log("  ID:", sId);
-                        console.log("  Nombre Completo:", sFullName);
-                        console.log("  Correo:", sEmail);
-                        console.log("  Idioma (Perfil):", sLanguage);
-
-                        // Puedes almacenar esta información en un modelo JSON local para usarla en la vista
-                        const oUserModel = new JSONModel({
-                            id: sId,
-                            email: sEmail,
-                            firstName: sFirstName,
-                            lastName: sLastName,
-                            fullName: sFullName,
-                            language: sLanguage
-                        });
-                        this.getView().setModel(oUserModel, "userModel");
-
-                    }.bind(this))
-                    .catch(function (oError) {
-                        console.error("Error al obtener UserInfo Service:", oError);
-                    });
-            } else {
-                console.warn("Servicio UserInfo no disponible. ¿La aplicación está en Launchpad o simulada?");
-                // En desarrollo local sin Launchpad, puedes simular un usuario
-                const oUserModel = new JSONModel({
-                    id: "USUARIO_DEV",
-                    email: "dev.user@example.com",
-                    firstName: "Usuario",
-                    lastName: "Desarrollo",
-                    fullName: "Usuario Desarrollo",
-                    language: "es"
-                });
-                this.getView().setModel(oUserModel, "userModel");
             }
         },
         /**
@@ -225,7 +166,7 @@ sap.ui.define([
          * @private
          */
         _onRouteMatched: function (oEvent) {
-            this.clearAllSortingsFilters();
+            this.onClearAllFilters();
         },
         /**
          * Realiza conteo de las filas de la tabla luego que esta renderizada
@@ -240,71 +181,69 @@ sap.ui.define([
             oViewModel.setProperty("/filteredCount", iFilteredCount);
         },
         /**
-         * Elimina el ordenamiento y los filtros aplicados en la tabla
-         * aprimiendo la "X" junto al input de filtro global
-         * @private
-         */
-        clearAllSortingsFilters: function (oEvent) {
-            var oTable = this.byId("requestsTable");
-
-            oTable.getBinding()?.sort(null);
-            var oUiModel = this.getView().getModel("modeloLocal");
-            oUiModel.setProperty("/globalFilter", "");
-            oUiModel.setProperty("/availabilityFilterOn", false);
-
-            this._oGlobalFilter = null;
-            // this._filter();
-
-            var aColumns = oTable.getColumns();
-            for (var i = 0; i < aColumns.length; i++) {
-                oTable.filter(aColumns[i], null);
-            }
-
-            this._resetSortingState();
-
-        },
-        /**
-         * Quita el ordenamiento de cada columna en la tabla
-         * @private
-         */
-        _resetSortingState: function () {
-            var oTable = this.byId("requestsTable");
-            var aColumns = oTable.getColumns();
-            for (var i = 0; i < aColumns.length; i++) {
-                aColumns[i].setSorted(false);
-            }
-        },
-        /**
-         * Crea los filtros conforme la query obtenida en el input filter global
-         * @public
-         */
-        filterGlobally: function (oEvent) {
-            var sQuery = oEvent.getParameter("query");
+        * Crea los filtros conforme la query obtenida en el input filter global
+        * @public
+        */
+        onGlobalFilter: function (oEvent) {
+            const sQuery = oEvent.getParameter("newValue");
             this._oGlobalFilter = null;
 
             if (sQuery) {
-                this._oGlobalFilter = new Filter([
-                    new Filter("cust_nombreSolicitud", FilterOperator.Contains, sQuery),
-                    new Filter("cust_nombreTSolicitud", FilterOperator.Contains, sQuery),
-                    new Filter("cust_solicitante", FilterOperator.Contains, sQuery)
-                ], false);
+                // Crea un filtro OR para buscar en múltiples campos
+                this._oGlobalFilter = new Filter({
+                    filters: [
+                        new Filter("cust_nombreSolicitud", FilterOperator.Contains, sQuery),
+                        new Filter("cust_nombreTSolicitud", FilterOperator.Contains, sQuery),
+                        new Filter("cust_solicitante", FilterOperator.Contains, sQuery)
+                    ],
+                    and: false // and: false significa que es un OR
+                });
+            } else {
+                this.onClearAllFilters();
             }
 
-            this._filter();
-            this._updateTableCount();
+            this._applyFiltersToTable();
         },
+
         /**
-         * Aplica los filtros a la tabla
+         * Maneja el evento 'filter' que se dispara desde las columnas de la tabla.
+         * (Puedes dejarlo vacío por ahora si no tienes lógica de filtro de columna compleja)
+         */
+        onColumnFilter: function (oEvent) {
+            return;
+        },
+
+        /**
+        * Limpia TODOS los filtros y ordenamientos. Llamado por el botón 'X' del input.
+        * @private
+        */
+        onClearAllFilters: function () {
+            // Limpia el campo de búsqueda
+            this.getView().getModel("modeloLocal").setProperty("/globalFilter", "");
+
+            this._oGlobalFilter = null;
+
+            // Limpia los filtros de las columnas (la forma correcta)
+            const oTable = this.byId("requestsTable");
+            //Eliminamos el ordenamiento en la tabla si lo hay
+            this.byId("requestsTable")?.getBinding("rows")?.sort(null);
+            oTable.getColumns().forEach(oColumn => {
+                oColumn.setFiltered(false);
+                oColumn.setSorted(false); // También resetea el ordenamiento
+            });
+
+            // Finalmente, aplica los filtros (que ahora estarán vacíos)
+            this._applyFiltersToTable();
+        },
+
+        /**
+         * Función centralizada para aplicar los filtros al binding de la tabla.
          * @private
          */
-        _filter: function () {
-            let oFilter = null;
-            if (this._oGlobalFilter) {
-                oFilter = new Filter([this._oGlobalFilter], true);
-            } else if (this._oGlobalFilter) {
-                oFilter = this._oGlobalFilter;
-            }
-            this.byId("requestsTable").getBinding().filter(oFilter, "Application");
+        _applyFiltersToTable: function () {
+            const oTable = this.byId("requestsTable");
+            const oBinding = oTable.getBinding("rows");
+            oBinding?.filter(this._oGlobalFilter, "Application");
         },
         /**
          * Crea nuevo modelo para variable de busy table (boolean)
@@ -371,6 +310,7 @@ sap.ui.define([
         _getMainDataEntity: async function () {
             let oModel = this.getOwnerComponent().getModel();
             let oViewModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
+            const sUserOnLine = sessionStorage.getItem("userName")
             const oParameters = {
                 bParam: true,
                 oParameter: {
@@ -379,95 +319,22 @@ sap.ui.define([
                 }
             };
             const oData = await service.readDataERP("/cust_INETUM_SOL_DM_0001", oModel, [], oParameters);
-            const aEnrichmentPromises = oData.data.results.map(async (element) => {
-                // Esperamos a que la llamada anidada termine PARA CADA elemento
-                const oNameData = await this._getNameTypeRequest(oModel, element);
-                // Modificamos el elemento con los datos obtenidos
-                element.cust_nombreSolicitud = oNameData?.cust_nombreSol_defaultValue;
-                element.cust_nombreTSolicitud = oNameData?.cust_idTipo2Nav?.cust_nombreTSol_defaultValue;
+            const aEnrichedData = oData.data.results.map(element => {
+                element.cust_nombreSolicitud = element?.cust_nombreSol || "Sin nombre";
+                element.cust_nombreTSolicitud = element?.cust_nombreTSol || "Sin nombre tipo";
                 return element;
             });
-            const aEnrichedData = await Promise.all(aEnrichmentPromises);
 
             const aFiltered = aEnrichedData.filter(element => {
-                return element.cust_steps.results.some(step => step.cust_aprobUser == "SFADMIN_LBM" && step.cust_activeStep === false);
+                return element.cust_steps.results.some(step => step.cust_aprobUser === sUserOnLine && step.cust_activeStep === true);
             }).map(element => {
                 const sCustVto = Lenguaje.obtenerNombreConcatenado("cust_vto");
                 element.cust_vto = oViewModelC0000.oData[0][sCustVto];
                 return element;
             });
 
-            // console.log("Datos finales filtrados y mapeados:", aFiltered);
-
             const oNewModelDm0001 = new JSONModel({ cust_INETUM_SOL_DM_0001: aEnrichedData });
             this.getOwnerComponent().setModel(oNewModelDm0001, "cust_INETUM_SOL_DM_0001");
-        },
-        /**
-         * Obtiene el nombre y tipo de solicitud para mostrar en la tabla
-         * @param {object} oModel Modelo de conexión de la api
-         * @param {object} oData Datos de la entidad DM_0001 para hacer la consulta
-         * @private
-         */
-        _getNameTypeRequest: async function (oModel, oData) {
-            let oKeyC0001 = oModel.createKey('/cust_INETUM_SOL_C_0001', {
-                cust_object: oData.cust_object
-            });
-            const aFilter = [
-                new Filter("cust_object", FilterOperator.EQ, oData.cust_object)
-            ];
-            const oParameters = {
-                bParam: true,
-                oParameter: {
-                    "$expand": "cust_idTipo2Nav",
-                    "$select": "cust_idTipo2Nav,cust_nombreSol_ca_ES,cust_nombreSol_defaultValue,cust_nombreSol_en_DEBUG,cust_nombreSol_en_US,cust_nombreSol_es_ES,cust_nombreSol_localized"
-                }
-            };
-            const oDataC0001 = await service.readDataERP("/cust_INETUM_SOL_C_0001", oModel, aFilter, oParameters)
-            return oDataC0001.data.results[0]
-        },
-        /**
-         * Procesa y transforma los resultados del servicio para agruparlos por tipo.
-         * @param {Array} aResults - El array de datos crudos del servicio.
-         * @returns {Array} El array de datos procesados y agrupados.
-         * @private
-         */
-        _procesarYAgruparResultados: function (aResults) {
-            const sNombreTipoSolicitud = "cust_nombreTSol_defaultValue";
-            const sNombreSolicitud = "cust_nombreSol_defaultValue";
-            const grouped = {};
-
-            aResults.forEach(item => {
-                // Se itera en los resultados de la entidad 0001, se le asigna a la variable 'tipo' el valor
-                // actual del nombre de la solicitud desde la entidad 0002 (obtenida por el expand),
-                // esto con el fin de buscar dentro de 'grouped' si ya hay un grupo con ese nombre.
-                const tipo = item.cust_idTipo2Nav?.[sNombreTipoSolicitud] || "Sin tipo definido";
-
-                // Se busca por ese nombre en el objeto 'grouped'. Si no se encuentra en el primer llamado,
-                // se asigna un array vacío. Ej: grouped['Solicitud de Vacaciones'] = [],
-                // para que los elementos que coincidan con ese nombre se puedan agregar.
-                if (!grouped[tipo]) {
-                    grouped[tipo] = [];
-                }
-
-                // Ahora que el array del grupo está inicializado, se le puede hacer push de los elementos del hijo (entidad 0001).
-                grouped[tipo].push({
-                    id: item.externalCode,
-                    nombre: item[sNombreSolicitud],
-                    fecha: item.effectiveStartDate,
-                    evento: item.cust_event,
-                    razonEvento: item.cust_eventReason,
-                    objeto: item.cust_object,
-                    tipoObjeto: item.cust_tipoObject,
-                    campos_C_0004: item.cust_solFields,
-                    WFNav_C_0003: item.cust_idWFNav
-                });
-            });
-
-            // Se transforma el objeto en un array para el binding de la vista.
-            return Object.keys(grouped).map(tipo => ({
-                type: tipo,
-                items: grouped[tipo]
-            }));
         }
     });
 });
