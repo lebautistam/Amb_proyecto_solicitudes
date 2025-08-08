@@ -248,6 +248,10 @@
                                             tooltip="{i18n>return}"
                                             press=".onReturn"
                                             class="sapUiNoMarginEnd sap-icon-color-negative"
+                                            visible="{
+                                                    path: 'cust_INETUM_SOL_DM_0001>cust_indexStep',
+                                                    formatter: '.formatter.isFirstStep'
+                                            }"
                                         />
                                         <m:Button
                                             id="_IDGenButton9"
@@ -263,11 +267,23 @@
                                             tooltip="{i18n>back}"
                                             press=".onBack"
                                             class="sapUiNoMarginEnd"
+                                            visible="{
+                                                    path: 'cust_INETUM_SOL_DM_0001>cust_indexStep',
+                                                    formatter: '.formatter.isFirstStep'
+                                            }"
                                         />
                                     </m:OverflowToolbar>
                                 </template>
                             </Column>
                         </columns>
+                        <noData>
+                                <m:IllustratedMessage 
+                                    id="_IDGenIllustratedMessage"
+                                    illustrationType="sapIllus-NoEntries"
+                                    enableVerticalResponsiveness="true"
+                                    title="No se encontraron datos"
+                                    description="No tiene solicitudes asignadas"/>
+                        </noData>
                     </Table>
                 </m:VBox>
             </m:Panel>

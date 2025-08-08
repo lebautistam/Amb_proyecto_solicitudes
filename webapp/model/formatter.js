@@ -14,7 +14,7 @@ sap.ui.define([
         */
         formatVencimiento: function (sCustFechaVenci, sCustVto) {
 
-            if (!sCustFechaVenci || sCustFechaVenci === null || sCustFechaVenci === "null") return '' ;
+            if (!sCustFechaVenci || sCustFechaVenci === null || sCustFechaVenci === "null") return '';
 
             if (!sCustFechaVenci instanceof Date || isNaN(sCustFechaVenci.getTime())) return '';
 
@@ -45,7 +45,6 @@ sap.ui.define([
             }
             let oToday = new Date();
             let oCusFeSol = new Date(sCustFechaVenci);
-            // console.log(oToday, "hoyno: " + oCusFeSol);
             if (oCusFeSol >= oToday) {
                 return "None";
             } else {
@@ -74,6 +73,16 @@ sap.ui.define([
         */
         inCourse: function (cust_status) {
             return cust_status === 'EC';
+        },
+        /**
+        * Valida que la condición se cumpla o no
+        * Mostrar o no el botón de devolver solo si el paso actual es diferente de 1
+        * @param {string} cust_status estatus de la solicitud
+        * @returns {boolean} (true) or (false)
+        * @public
+        */
+        isFirstStep: function (iIndexStep) {
+            return parseInt(iIndexStep) !== 1;
         },
         formatStatusState: function (sStatus) {
             switch (sStatus) {

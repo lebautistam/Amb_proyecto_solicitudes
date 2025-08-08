@@ -8,9 +8,10 @@ sap.ui.define([
     "com/amb/ambpendiapro/utils/creadorFormulario",
     "com/amb/ambpendiapro/utils/Operaciones",
     "com/amb/ambpendiapro/utils/utils",
-    "sap/ui/core/routing/History"
+    "sap/ui/core/routing/History",
+    "sap/m/MessageBox",
 
-], (Controller, JSONModel, Filter, FilterOperator, Service, formatter, creadorFormulario, Operaciones, utils, History) => {
+], (Controller, JSONModel, Filter, FilterOperator, Service, formatter, creadorFormulario, Operaciones, utils, History, MessageBox) => {
     "use strict";
 
     return Controller.extend("com.amb.ambpendiapro.controller.VisualizarSolicitud", {
@@ -104,9 +105,16 @@ sap.ui.define([
                     await this._prepararModeloFiltrado(oRequestDetail);
                     const aCampos = oRequestDetail.cust_solFields?.results;
                     await creadorFormulario.generarFormulario(this, "FormularioDinamico_visualizacion", aCampos);
+                }else {
+                    throw new Error("Falló al buscar la soliciutd seleccionada " + sExternalCode);
                 }
-            } catch (error) {
-                console.error(error)
+            } catch (oError) {
+                const oParams = {
+                    actions: [MessageBox.Action.CLOSE],
+                    details: oError.message
+                }
+                utils.onShowMessage("Ocurrió un error al generar el formulario", "error", null, oParams)
+                console.error("Error al generar el Formulario", oError);
             } finally {
                 utils.showBI(false);
             }

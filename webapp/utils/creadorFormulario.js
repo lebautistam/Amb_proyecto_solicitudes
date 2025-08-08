@@ -14,7 +14,8 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "./utils",
-], function (FormElement, Label, Input, DatePicker, TextArea, Select, Item, UploadCollection, MessageToast, ListMode, Lenguaje, service, Filter, FilterOperator, utils) {
+    "sap/m/MessageBox"
+], function (FormElement, Label, Input, DatePicker, TextArea, Select, Item, UploadCollection, MessageToast, ListMode, Lenguaje, service, Filter, FilterOperator, utils, MessageBox) {
     "use strict";
     /**
     * construye un objeto de adjunto para visualizar
@@ -48,7 +49,6 @@ sap.ui.define([
             oEvent.preventDefault();
             const sDataURI = this.getUrl();
             const sFileName = this.getFileName();
-            // Crear un elemento <a> temporal en el DOM
             const a = document.createElement('a');
             a.href = sDataURI;
             a.download = sFileName;
@@ -82,89 +82,79 @@ sap.ui.define([
         const oModel = oController.getOwnerComponent().getModel();
         if (!oFormContainer) return;
         oFormContainer.destroyFormElements();
-        console.log(aCampos)
+
         for (const campo of aCampos) {
-            try {
-                const sLenguaje = Lenguaje.obtenerNombreConcatenado("cust_etiquetaInput");
-                const sLabel = sLenguaje;
-                const iLength = campo.cust_fieldLenght ? parseInt(campo.cust_fieldLenght, 10) : undefined;
-    
-                // Mapeo de propiedades de la API
-                let sTipoControl;
-                switch (String(campo.cust_fieldtype)) {
-                    case "P": sTipoControl = "Select"; break;
-                    case "F": sTipoControl = "DatePicker"; break;
-                    case "I": sTipoControl = "Input"; break;
-                    case "S": sTipoControl = "TextArea"; break;
-                    case "A": sTipoControl = "Attachment"; break;
-                    default: sTipoControl = "Input";
-                }
-    
-                const oFormElement = new FormElement({
-                    label: new Label({ text: sLabel })
-                });
-    
-                let oControl;
-    
-                // Creamos el control basado en el tipo
-                switch (sTipoControl) {
-                    case "Select":
-                        // 1. ESPERAMOS por el valor del backend
-                        const oCustLabel = await service.readDataERP("/PicklistLabel", oModel, [new Filter("optionId", "EQ", campo.cust_value)]);
-                        const sSelectValue = oCustLabel?.data?.results[0]?.label || ""; // Valor por defecto
-    
-                        oControl = new Input({
-                            value: sSelectValue,
-                            editable: false
-                        });
-                        break;
-                    case "DatePicker":
-                        oControl = new DatePicker({
-                            value: campo.cust_value,
-                            displayFormat: "dd/MM/yyyy",
-                            valueFormat: "yyyy-MM-dd",
-                            editable: false
-                        });
-                        break;
-                    case "Input":
-                        oControl = new Input({
-                            value: campo.cust_value,
-                            maxLength: iLength || 100,
-                            editable: false
-                        });
-                        break;
-                    case "Attachment":
-                        oControl = new UploadCollection({
-                            mode: sap.m.ListMode.SingleSelectMaster,
-                            multiple: false,
-                            uploadEnabled: false,
-                            terminationEnabled: false
-                        });
-    
-                        // 2. También usamos await aquí para consistencia
-                        const oAdjuntoData = await service.readDataERP("/Attachment", oModel, [new Filter("attachmentId", "EQ", campo.cust_value)]);
-                        if (oAdjuntoData.data.results.length) {
-                            const oItem = this._viewAttachment(oAdjuntoData.data.results[0]); // Asumo que _viewAttachment existe en oController
-                            oControl.addItem(oItem);
-                        }
-                        break;
-                    default:
-                         oControl = new Input({
-                            value: campo.cust_value,
-                            maxLength: iLength || 100,
-                            editable: false
-                        });
-                }
-    
-                if (oControl) {
-                    oControl.data("fieldName", campo.externalCode);
-                    oFormElement.addField(oControl);
-                    oFormContainer.addFormElement(oFormElement);
-                }
-    
-            } catch (error) {
-                console.error("Error al generar el campo dinámico:", campo.externalCode, error);
-                // Puedes decidir si continuar con el siguiente campo o detenerte
+            const sLenguaje = Lenguaje.obtenerNombreConcatenado("cust_etiquetaInput");
+            const sLabel = sLenguaje;
+            const iLength = campo.cust_fieldLenght ? parseInt(campo.cust_fieldLenght, 10) : undefined;
+
+            // Mapeo de propiedades de la API
+            let sTipoControl;
+            switch (String(campo.cust_fieldtype)) {
+                case "P": sTipoControl = "Select"; break;
+                case "F": sTipoControl = "DatePicker"; break;
+                case "I": sTipoControl = "Input"; break;
+                case "S": sTipoControl = "TextArea"; break;
+                case "A": sTipoControl = "Attachment"; break;
+                default: sTipoControl = "Input";
+            }
+
+            const oFormElement = new FormElement({
+                label: new Label({ text: sLabel })
+            });
+
+            let oControl;
+
+            switch (sTipoControl) {
+                case "Select":
+                    const oCustLabel = await service.readDataERP("/PicklistLabel", oModel, [new Filter("optionId", "EQ", campo.cust_value)]);
+                    const sSelectValue = oCustLabel?.data?.results[0]?.label || ""; // Valor por defecto
+
+                    oControl = new Input({
+                        value: sSelectValue,
+                        editable: false
+                    });
+                    break;
+                case "DatePicker":
+                    oControl = new DatePicker({
+                        value: campo.cust_value,
+                        displayFormat: "dd/MM/yyyy",
+                        valueFormat: "yyyy-MM-dd",
+                        editable: false
+                    });
+                    break;
+                case "Input":
+                    oControl = new Input({
+                        value: campo.cust_value,
+                        maxLength: iLength || 100,
+                        editable: false
+                    });
+                    break;
+                case "Attachment":
+                    oControl = new UploadCollection({
+                        mode: sap.m.ListMode.SingleSelectMaster,
+                        multiple: false,
+                        uploadEnabled: false,
+                        terminationEnabled: false
+                    });
+                    const oAdjuntoData = await service.readDataERP("/Attachment", oModel, [new Filter("attachmentId", "EQ", campo.cust_value)]);
+                    if (oAdjuntoData.data.results.length) {
+                        const oItem = this._viewAttachment(oAdjuntoData.data.results[0]); // Asumo que _viewAttachment existe en oController
+                        oControl.addItem(oItem);
+                    }
+                    break;
+                default:
+                    oControl = new Input({
+                        value: campo.cust_value,
+                        maxLength: iLength || 100,
+                        editable: false
+                    });
+            }
+
+            if (oControl) {
+                oControl.data("fieldName", campo.externalCode);
+                oFormElement.addField(oControl);
+                oFormContainer.addFormElement(oFormElement);
             }
         }
     }

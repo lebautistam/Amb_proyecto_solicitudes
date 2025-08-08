@@ -50,7 +50,6 @@ sap.ui.define([
         },
 
         showBI: function (value) {
-            console.log("entro BI", value)
             if (value) {
                 BusyIndicator.show(0);
             } else {
@@ -68,7 +67,7 @@ sap.ui.define([
                 }
                 oModel.refresh(true);
             } catch (error) {
-                console.error("error:", error)
+                console.error("Error al eliminar solicitud de modelo fn _deleteProcessedRequest:", error)
             }finally{
                 oView.getView().getModel("busy").setProperty("/tableBusy", false);
             }

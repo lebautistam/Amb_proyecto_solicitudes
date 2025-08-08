@@ -32,6 +32,8 @@
           "semanticObject": "Solicitudes_pendientes",
           "action": "Aprobar",
           "title": "{{Solicitudes_pendientes-Aprobar.flpTitle}}",
+          "subTitle": "{{Solicitudes_pendientes-Aprobar.flpSubTitle}}",
+          "icon": "sap-icon://approvals",
           "signature": {
             "parameters": {},
             "additionalParameters": "allowed"

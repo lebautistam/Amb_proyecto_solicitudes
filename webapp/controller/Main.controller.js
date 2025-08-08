@@ -20,7 +20,7 @@ sap.ui.define([
     return Controller.extend("com.amb.ambpendiapro.controller.Main", {
         formatter: formatter,
         onInit() {
-            this._managementRouter();
+            // this._managementRouter();
             this._requestBusy();
             this._getUserOnLine();
             this._initializeAsyncData();
@@ -36,6 +36,9 @@ sap.ui.define([
         _getUserOnLine: async function () {
             try {
                 const oResponse = await fetch(`${sap.ui.require.toUrl("com/amb/ambpendiapro")}/user-api/currentUser.json`);
+                if (!oResponse.ok) {
+                    throw new Error(`Error del servidor: ${oResponse.status} ${oResponse.statusText}`);
+                }
                 const oUserData = await oResponse.json();
                 var oViewUserModel = new JSONModel([{
                     "displayName": oUserData.displayName,
@@ -53,13 +56,14 @@ sap.ui.define([
                 const sUserMessage = oResourceBundle.getText("errorUserDataMessage");
                 const sTitle = oResourceBundle.getText("errorLoadDataTitle");
                 const sDetails = oResourceBundle.getText("errorLoadDataDetails");
-                Log.error(sLogMessage, JSON.stringify(oError, null, 2), this.getMetadata().getName());
+                Log.error(sLogMessage, oError.message, this.getMetadata().getName());
                 const oParams = {
                     title: sTitle,
                     details: sDetails,
                     actions: [MessageBox.Action.CLOSE]
                 }
                 utils.onShowMessage(sUserMessage, "error", null, oParams)
+                console.log(sLogMessage, " ", oError)
             }
         },
         /**
@@ -81,14 +85,14 @@ sap.ui.define([
                 const sTitle = oResourceBundle.getText("errorLoadDataTitle");
                 const sMessage = oResourceBundle.getText("errorLoadDataMessage");
                 const sDetails = oResourceBundle.getText("errorLoadDataDetails");
-                Log.error(sLogMessage, JSON.stringify(oError, null, 2), this.getMetadata().getName());
+                Log.error(sLogMessage, oError.message, this.getMetadata().getName());
                 const oParams = {
                     title: sTitle,
                     details: sDetails,
                     actions: [MessageBox.Action.CLOSE]
                 }
                 utils.onShowMessage(sMessage, "error", null, oParams)
-                console.log(oError)
+                console.log(sLogMessage, " ", oError)
             } finally {
                 this.getOwnerComponent().getModel("busy").setProperty("/tableBusy", false);
             }
@@ -139,6 +143,7 @@ sap.ui.define([
         * @public
         */
         onDetailRequest: function (oEvent) {
+            utils.showBI(true)
             let oButton = oEvent.getSource()
             let oContext = oButton.getBindingContext("cust_INETUM_SOL_DM_0001");
             this.getOwnerComponent().getRouter().navTo("RouteVisualizacionSolicitud", {
@@ -163,9 +168,9 @@ sap.ui.define([
          * @param {sap.ui.base.Event} oEvent El objeto del evento de la ruta.
          * @private
          */
-        _onRouteMatched: function (oEvent) {
-            this.onClearAllFilters();
-        },
+        // _onRouteMatched: function (oEvent) {
+        //     this.onClearAllFilters();
+        // },
         /**
          * Realiza conteo de las filas de la tabla luego que esta renderizada
          * y guarda el conteo en un modelo
@@ -308,7 +313,7 @@ sap.ui.define([
         _getMainDataEntity: async function () {
             let oModel = this.getOwnerComponent().getModel();
             let oViewModelC0000 = this.getView().getModel("cust_INETUM_SOL_C_0000");
-            const sUserOnLine = sessionStorage.getItem("userName")
+            let sUserOnLine = sessionStorage.getItem("userName")
             const oParameters = {
                 bParam: true,
                 oParameter: {
@@ -317,22 +322,21 @@ sap.ui.define([
                 }
             };
             const oData = await service.readDataERP("/cust_INETUM_SOL_DM_0001", oModel, [], oParameters);
-            const aEnrichedData = oData.data.results.map(element => {
-                console.log(element)
+            // const aEnrichedData = oData.data.results.map(element => {
+            //     return element;
+            // });
+            //Filtramos para obtener la solicitud con pasos del user conectado
+            const sCustVto = Lenguaje.obtenerNombreConcatenado("cust_vto");
+            const aFiltered = oData.data.results.filter(element => {
+                return element.cust_steps.results.some(step => step.cust_aprobUser === sUserOnLine && step.cust_activeStep === true);
+            }).map(element => { //  mapeamos campos faltantes al objeto, ej cust_vto para usar en columna Vencimiento de tabla
                 element.cust_nombreSolicitud = element?.cust_nombreSol || "Sin nombre";
                 element.cust_nombreTSolicitud = element?.cust_nombreTSol || "Sin nombre tipo";
-                return element;
-            });
-
-            const aFiltered = aEnrichedData.filter(element => {
-                return element.cust_steps.results.some(step => step.cust_aprobUser === sUserOnLine && step.cust_activeStep === false);
-            }).map(element => {
-                const sCustVto = Lenguaje.obtenerNombreConcatenado("cust_vto");
                 element.cust_vto = oViewModelC0000.oData[0][sCustVto];
                 return element;
             });
 
-            const oNewModelDm0001 = new JSONModel({ cust_INETUM_SOL_DM_0001: aEnrichedData });
+            const oNewModelDm0001 = new JSONModel({ cust_INETUM_SOL_DM_0001: aFiltered });
             this.getOwnerComponent().setModel(oNewModelDm0001, "cust_INETUM_SOL_DM_0001");
         }
     });
